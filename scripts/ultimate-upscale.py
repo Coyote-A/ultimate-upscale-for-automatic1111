@@ -77,6 +77,7 @@ def redraw_image(p, upscaled_img, rows, cols, tileSize, padding):
 
 
 def seam_draw(p, upscaled_img, seam_pass_width, seam_pass_padding, seam_pass_denoise, padding, tileSize, cols, rows):
+    p.denoising_strength = seam_pass_denoise
     for xi in range(1, cols):
         p.width = seam_pass_width + seam_pass_padding * 2
         p.height = upscaled_img.height
