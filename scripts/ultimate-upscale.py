@@ -174,12 +174,12 @@ class Script(scripts.Script):
         state.job_count = rows * cols + seams
 
         result_image, initial_info = redraw_image(p, upscaled_img, rows, cols, tileSize, padding)
-        result_images.append()
+        result_images.append(result_image)
 
         if seam_pass_enabled:
             print(f"Starting seam path drawing")
             result_images.append(
-                seam_draw(p, upscaled_img, seam_pass_width, seam_pass_padding, seam_pass_denoise, padding, tileSize, cols, rows))
+                seam_draw(p, result_image, seam_pass_width, seam_pass_padding, seam_pass_denoise, padding, tileSize, cols, rows))
 
         processed = Processed(p, result_images, seed, initial_info)
 
