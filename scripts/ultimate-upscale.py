@@ -11,7 +11,7 @@ from modules.shared import opts, cmd_opts, state
 
 class Script(scripts.Script):
     def title(self):
-        return "SD upscale 5"
+        return "Ultimate SD upscale"
 
     def show(self, is_img2img):
         return is_img2img
