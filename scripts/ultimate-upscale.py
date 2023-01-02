@@ -8,6 +8,24 @@ from modules import processing, shared, sd_samplers, images, devices
 from modules.processing import Processed
 from modules.shared import opts, cmd_opts, state
 
+def upscale(p, init_img, upscaler_index, tileSize, padding):
+    scale_factor = max(p.width, p.height) // tileSize
+    print(f"Canva size: {p.width}x{p.height}")
+    print(f"Tile size: {tileSize}")
+    print(f"Scale factor: {scale_factor}")
+    upscaler = shared.sd_upscalers[upscaler_index]
+
+    p.extra_generation_params["SD upscale overlap"] = padding
+    p.extra_generation_params["SD upscale upscaler"] = upscaler.name
+
+    initial_info = None
+    seed = p.seed
+    if upscaler.name != "None":
+        upscaled_img = upscaler.scaler.upscale(init_img, scale_factor, upscaler.data_path)
+    else:
+        upscaled_img = init_img
+
+    return upscaled_img.resize((p.width, p.height), resample=Image.LANCZOS)
 
 class Script(scripts.Script):
     def title(self):
@@ -18,6 +36,7 @@ class Script(scripts.Script):
 
     def ui(self, is_img2img):
         info = gr.HTML("<p style=\"margin-bottom:0.75em\">Will upscale the image by the selected scale factor; use width and height sliders to set tile size</p>")
+        upscaler_index = gr.Radio(label='Upscaler', choices=[x.name for x in shared.sd_upscalers], value=shared.sd_upscalers[0].name, type="index")
         tileSize = gr.Slider(minimum=256, maximum=2048, step=64, label='Tile size', value=512)
         mask_blur = gr.Slider(label='Mask blur', minimum=0, maximum=64, step=1, value=8)
         padding = gr.Slider(label='Padding', minimum=0, maximum=128, step=1, value=32)
@@ -26,9 +45,9 @@ class Script(scripts.Script):
         seam_pass_denoise = gr.Slider(label='Seam pass denoise', minimum=0, maximum=1, step=0.01, value=0.25)
         seam_pass_padding = gr.Slider(label='Seam pass padding', minimum=0, maximum=128, step=1, value=32)
 
-        return [info, tileSize, mask_blur, padding, seam_pass_enabled, seam_pass_width, seam_pass_denoise, seam_pass_padding]
+        return [info, upscaler_index, tileSize, mask_blur, padding, seam_pass_enabled, seam_pass_width, seam_pass_denoise, seam_pass_padding]
 
-    def run(self, p, _, tileSize, mask_blur, padding, seam_pass_enabled, seam_pass_width, seam_pass_denoise, seam_pass_padding):
+    def run(self, p, _, tileSize, mask_blur, padding, seam_pass_enabled, seam_pass_width, seam_pass_denoise, seam_pass_padding, upscaler_index):
         processing.fix_seed(p)
         p.extra_generation_params["SD upscale tileSize"] = tileSize
         p.mask_blur = mask_blur
@@ -38,7 +57,7 @@ class Script(scripts.Script):
         init_img = p.init_images[0]
         init_img = images.flatten(init_img, opts.img2img_background_color)
 
-        upscaled_img = init_img.resize((p.width, p.height), resample=Image.LANCZOS)
+        upscaled_img = upscale(p, init_img, upscaler_index, tileSize, padding)
 
         devices.torch_gc()
 
