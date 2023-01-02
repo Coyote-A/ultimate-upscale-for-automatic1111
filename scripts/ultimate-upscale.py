@@ -38,6 +38,9 @@ def upscale(p, init_img, upscaler_index, tileSize, padding):
             current_scale_factor = scale_factor - i * 4
         else:
             current_scale_factor = 4
+
+        if current_scale_factor == 1:
+            current_scale_factor = 2
         
         print(f"Upscaling iteration {i} with scale factor {current_scale_factor}")
         upscaled_img = upscaler.scaler.upscale(upscaled_img, current_scale_factor, upscaler.data_path)
