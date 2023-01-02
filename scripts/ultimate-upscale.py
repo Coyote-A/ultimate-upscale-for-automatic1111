@@ -166,7 +166,7 @@ class Script(scripts.Script):
 
         if seam_pass_enabled:
             print(f"Starting seam path drawing")
-            result_images.append(seam_draw(p, upscaled_img, seam_pass_width, seam_pass_padding, seam_pass_denoise, padding, tileSize))
+            result_images.append(seam_draw(p, upscaled_img, seam_pass_width, seam_pass_padding, seam_pass_denoise, padding, tileSize, cols, rows))
 
         processed = Processed(p, result_images, seed, initial_info)
 
