@@ -157,6 +157,9 @@ class Script(scripts.Script):
         # Drawing
         devices.torch_gc()
 
+        p.do_not_save_grid = True
+        p.do_not_save_samples = True
+
         p.inpaint_full_res = False
 
         rows = math.ceil(p.height / tileSize)
@@ -178,9 +181,10 @@ class Script(scripts.Script):
 
         if seam_pass_enabled:
             print(f"Starting seam path drawing")
-            result_images.append(
-                seam_draw(p, result_image, seam_pass_width, seam_pass_padding, seam_pass_denoise, padding, tileSize, cols, rows))
+            result_image = seam_draw(p, result_image, seam_pass_width, seam_pass_padding, seam_pass_denoise, padding, tileSize, cols, rows)
+            result_images.append(result_image)
 
+        images.save_image(result_image, p.outpath_samples, "", seed, p.prompt, opts.grid_format, info=initial_info, p=p)
         processed = Processed(p, result_images, seed, initial_info)
 
         return processed
