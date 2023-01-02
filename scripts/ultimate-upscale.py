@@ -82,7 +82,7 @@ def seam_draw(p, upscaled_img, seam_pass_width, seam_pass_padding, seam_pass_den
         p.width = seam_pass_width + seam_pass_padding * 2
         p.height = upscaled_img.height
         p.inpaint_full_res = True
-        p.inpaint_full_res_padding = padding
+        p.inpaint_full_res_padding = seam_pass_padding
         mask = Image.new("L", (upscaled_img.width, upscaled_img.height), "black")
         draw = ImageDraw.Draw(mask)
         draw.rectangle((
@@ -101,7 +101,7 @@ def seam_draw(p, upscaled_img, seam_pass_width, seam_pass_padding, seam_pass_den
         p.width = upscaled_img.width
         p.height = seam_pass_width + seam_pass_padding * 2
         p.inpaint_full_res = True
-        p.inpaint_full_res_padding = padding
+        p.inpaint_full_res_padding = seam_pass_padding
         mask = Image.new("L", (upscaled_img.width, upscaled_img.height), "black")
         draw = ImageDraw.Draw(mask)
         draw.rectangle((
