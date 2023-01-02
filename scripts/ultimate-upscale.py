@@ -129,16 +129,20 @@ class Script(scripts.Script):
     def ui(self, is_img2img):
         info = gr.HTML(
             "<p style=\"margin-bottom:0.75em\">Will upscale the image to selected with and height</p>")
+        gr.HTML("<p style=\"margin-bottom:0.75em\">Redraw options:</p>")
+        with gr.Row():
+            tileSize = gr.Slider(minimum=256, maximum=2048, step=64, label='Tile size', value=512)
+            mask_blur = gr.Slider(label='Mask blur', minimum=0, maximum=64, step=1, value=8)
+            padding = gr.Slider(label='Padding', minimum=0, maximum=128, step=1, value=32)
         upscaler_index = gr.Radio(label='Upscaler', choices=[x.name for x in shared.sd_upscalers],
-                                  value=shared.sd_upscalers[0].name, type="index")
-        tileSize = gr.Slider(minimum=256, maximum=2048, step=64, label='Tile size', value=512)
-        mask_blur = gr.Slider(label='Mask blur', minimum=0, maximum=64, step=1, value=8)
-        padding = gr.Slider(label='Padding', minimum=0, maximum=128, step=1, value=32)
-        seam_pass_enabled = gr.Checkbox(label="Seam pass enabled")
-        seam_pass_width = gr.Slider(label='Seam pass width', minimum=0, maximum=128, step=1, value=16)
-        seam_pass_denoise = gr.Slider(label='Seam pass denoise', minimum=0, maximum=1, step=0.01, value=0.25)
-        seam_pass_padding = gr.Slider(label='Seam pass padding', minimum=0, maximum=128, step=1, value=32)
-        gr.HTML("Save options:")
+                                value=shared.sd_upscalers[0].name, type="index")
+        gr.HTML("<p style=\"margin-bottom:0.75em\">Tile grid fix:</p>")
+        with gr.Row():
+            seam_pass_enabled = gr.Checkbox(label="Enabled")
+            seam_pass_width = gr.Slider(label='Width', minimum=0, maximum=128, step=1, value=16)
+            seam_pass_denoise = gr.Slider(label='Denoise', minimum=0, maximum=1, step=0.01, value=0.25)
+            seam_pass_padding = gr.Slider(label='Padding', minimum=0, maximum=128, step=1, value=32)
+        gr.HTML("<p style=\"margin-bottom:0.75em\">Save options:</p>")
         with gr.Row():
             save_upscaled_image = gr.Checkbox(label="Upscaled", value=True)
             save_seam_path_image = gr.Checkbox(label="Seam path", value=True)
