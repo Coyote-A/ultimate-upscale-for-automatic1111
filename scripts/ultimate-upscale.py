@@ -40,7 +40,7 @@ def upscale(p, init_img, upscaler_index, tileSize, padding):
             current_scale_factor = 4
         
         print(f"Upscaling iteration {i} with scale factor {current_scale_factor}")
-        upscaled_img = upscaler.scaler.upscale(init_img, current_scale_factor, upscaler.data_path)
+        upscaled_img = upscaler.scaler.upscale(upscaled_img, current_scale_factor, upscaler.data_path)
 
     return upscaled_img.resize((p.width, p.height), resample=Image.LANCZOS)
 
@@ -69,7 +69,7 @@ def redraw_image(p, upscaled_img, rows, cols, tileSize, padding):
                 upscaled_img = processed.images[0]
     return upscaled_img
 
-def seam_draw(p, upscaled_img, seam_pass_width, seam_pass_padding, seam_pass_denoise, padding, tileSize):
+def seam_draw(p, upscaled_img, seam_pass_width, seam_pass_padding, seam_pass_denoise, padding, tileSize, cols, rows):
     for xi in range(1, cols):
         p.width = seam_pass_width + seam_pass_padding*2
         p.height = upscaled_img.height
