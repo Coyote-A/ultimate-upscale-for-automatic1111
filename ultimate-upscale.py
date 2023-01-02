@@ -51,6 +51,7 @@ class Script(scripts.Script):
         if seam_pass_enabled:
             seams = rows-1 + cols - 1
 
+        result_images = []
         state.job_count = rows*cols + seams
         for yi in range(rows):
             for xi in range(cols):
@@ -75,6 +76,8 @@ class Script(scripts.Script):
                 if (len(processed.images)>0):
                     upscaled_img = processed.images[0]
 
+        result_images.append(upscaled_img)
+
         if seam_pass_enabled:
             for xi in range(1, cols):
                 p.width = seam_pass_width + seam_pass_padding*2
@@ -86,7 +89,7 @@ class Script(scripts.Script):
                 draw.rectangle((
                     xi * tileSize - seam_pass_width//2,
                     0,
-                    xi * tileSize - seam_pass_width//2,
+                    xi * tileSize + seam_pass_width//2,
                     mask.height
                 ), fill="white")
 
@@ -103,10 +106,10 @@ class Script(scripts.Script):
                 mask = Image.new("L", (upscaled_img.width, upscaled_img.height), "black")
                 draw = ImageDraw.Draw(mask)
                 draw.rectangle((
-                    xi * tileSize - seam_pass_width//2,
                     0,
-                    xi * tileSize - seam_pass_width//2,
-                    mask.height
+                    yi * tileSize - seam_pass_width//2,
+                    mask.width,
+                    yi * tileSize + seam_pass_width//2
                 ), fill="white")
 
                 p.init_images = [upscaled_img]
@@ -116,7 +119,6 @@ class Script(scripts.Script):
                     upscaled_img = processed.images[0]
 
 
-        result_images = []
         result_images.append(upscaled_img)
         processed = Processed(p, result_images, seed, initial_info)
 
