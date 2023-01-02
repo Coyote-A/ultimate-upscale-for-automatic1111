@@ -164,6 +164,8 @@ class Script(scripts.Script):
         p.mask_blur = mask_blur
         seed = p.seed
 
+        initial_info = None
+
         init_img = p.init_images[0]
         init_img = images.flatten(init_img, opts.img2img_background_color)
 
@@ -204,6 +206,6 @@ class Script(scripts.Script):
             if save_seam_path_image:
                 images.save_image(result_image, p.outpath_samples, "", seed, p.prompt, opts.grid_format, info=initial_info, p=p)
 
-        processed = Processed(p, result_images, seed, initial_info)
+        processed = Processed(p, result_images, seed, initial_info if initial_info is not None else "")
 
         return processed
