@@ -8,6 +8,16 @@ from modules import processing, shared, sd_samplers, images, devices
 from modules.processing import Processed
 from modules.shared import opts, cmd_opts, state
 
+def getFactor(num):
+    if num == 1:
+        return 2
+    if num % 4 == 0:
+        return 4
+    if num % 3 == 0:
+        return 3
+    if num % 2 == 0:
+        return 2
+    return 0
 
 def upscale(p, init_img, upscaler_index, tileSize, padding):
     scale_factor = max(p.width, p.height) // max(init_img.width, init_img.height)
@@ -26,24 +36,20 @@ def upscale(p, init_img, upscaler_index, tileSize, padding):
     upscaled_img = init_img
     if upscaler.name == "None":
         return upscaled_img.resize((p.width, p.height), resample=Image.LANCZOS)
-
-    if scale_factor > 4:
-        iterations = math.ceil(scale_factor / 4)
-    else:
-        iterations = 1
-
-    print(f"Total iterations: {iterations}")
-
-    for i in range(iterations):
-        if i + 1 == iterations:
-            current_scale_factor = scale_factor - i * 4
-        else:
-            current_scale_factor = 4
-
-        if current_scale_factor == 1:
-            current_scale_factor = 2
-
-        print(f"Upscaling iteration {i} with scale factor {current_scale_factor}")
+    
+    current_scale = 1
+    iteration = 0
+    current_scale_factor = getFactor(scale_factor)
+    while current_scale_factor == 0:
+        scale_factor += 1
+        current_scale_factor = getFactor(scale_factor)
+    while current_scale < scale_factor:
+        iteration += 1
+        current_scale_factor = getFactor(scale_factor // current_scale)
+        current_scale = current_scale * current_scale_factor
+        if current_scale_factor == 0:
+            break
+        print(f"Upscaling iteration {iteration} with scale factor {current_scale_factor}")
         upscaled_img = upscaler.scaler.upscale(upscaled_img, current_scale_factor, upscaler.data_path)
 
     return upscaled_img.resize((p.width, p.height), resample=Image.LANCZOS)
@@ -131,7 +137,7 @@ class Script(scripts.Script):
             "<p style=\"margin-bottom:0.75em\">Will upscale the image to selected with and height</p>")
         gr.HTML("<p style=\"margin-bottom:0.75em\">Redraw options:</p>")
         with gr.Row():
-            redraw_enabled = gr.Checkbox(label="Enabled")
+            redraw_enabled = gr.Checkbox(label="Enabled", value=True)
             tileSize = gr.Slider(minimum=256, maximum=2048, step=64, label='Tile size', value=512)
             mask_blur = gr.Slider(label='Mask blur', minimum=0, maximum=64, step=1, value=8)
             padding = gr.Slider(label='Padding', minimum=0, maximum=128, step=1, value=32)
