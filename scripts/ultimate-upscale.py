@@ -182,7 +182,7 @@ class Script(scripts.Script):
         seams = 0
         if seam_pass_enabled:
             seams = rows - 1 + cols - 1
-
+        state.job_count = ((rows*cols) if redraw_enabled else 0) + (seams if seam_pass_enabled else 0)
         result_images = []
         result_image = upscaled_img
         if redraw_enabled:
