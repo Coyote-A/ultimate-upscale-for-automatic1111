@@ -128,7 +128,7 @@ class Script(scripts.Script):
 
     def ui(self, is_img2img):
         info = gr.HTML(
-            "<p style=\"margin-bottom:0.75em\">Will upscale the image by the selected scale factor; use width and height sliders to set tile size</p>")
+            "<p style=\"margin-bottom:0.75em\">Will upscale the image to selected with and height</p>")
         upscaler_index = gr.Radio(label='Upscaler', choices=[x.name for x in shared.sd_upscalers],
                                   value=shared.sd_upscalers[0].name, type="index")
         tileSize = gr.Slider(minimum=256, maximum=2048, step=64, label='Tile size', value=512)
@@ -138,12 +138,16 @@ class Script(scripts.Script):
         seam_pass_width = gr.Slider(label='Seam pass width', minimum=0, maximum=128, step=1, value=16)
         seam_pass_denoise = gr.Slider(label='Seam pass denoise', minimum=0, maximum=1, step=0.01, value=0.25)
         seam_pass_padding = gr.Slider(label='Seam pass padding', minimum=0, maximum=128, step=1, value=32)
+        gr.HTML("Save options:")
+        with gr.Row():
+            save_upscaled_image = gr.Checkbox(label="Upscaled", value=True)
+            save_seam_path_image = gr.Checkbox(label="Seam path", value=True)
 
         return [info, tileSize, mask_blur, padding, seam_pass_enabled, seam_pass_width, seam_pass_denoise,
-                seam_pass_padding, upscaler_index]
+                seam_pass_padding, upscaler_index, save_upscaled_image, save_seam_path_image]
 
     def run(self, p, _, tileSize, mask_blur, padding, seam_pass_enabled, seam_pass_width, seam_pass_denoise,
-            seam_pass_padding, upscaler_index):
+            seam_pass_padding, upscaler_index, save_upscaled_image, save_seam_path_image):
         processing.fix_seed(p)
         p.extra_generation_params["SD upscale tileSize"] = tileSize
         p.mask_blur = mask_blur
@@ -179,13 +183,16 @@ class Script(scripts.Script):
 
         result_image, initial_info = redraw_image(p, upscaled_img, rows, cols, tileSize, padding)
         result_images.append(result_image)
+        if save_upscaled_image:
+            images.save_image(result_image, p.outpath_samples, "", seed, p.prompt, opts.grid_format, info=initial_info, p=p)
 
         if seam_pass_enabled:
             print(f"Starting seam path drawing")
             result_image = seam_draw(p, result_image, seam_pass_width, seam_pass_padding, seam_pass_denoise, padding, tileSize, cols, rows)
             result_images.append(result_image)
+            if save_seam_path_image:
+                images.save_image(result_image, p.outpath_samples, "", seed, p.prompt, opts.grid_format, info=initial_info, p=p)
 
-        images.save_image(result_image, p.outpath_samples, "", seed, p.prompt, opts.grid_format, info=initial_info, p=p)
         processed = Processed(p, result_images, seed, initial_info)
 
         return processed
