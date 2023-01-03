@@ -136,19 +136,22 @@ def redraw_middle_offset_image(p, upscaled_img, rows, cols, tileSize, padding, o
 def seam_draw(p, upscaled_img, seam_pass_width, seam_pass_padding, seam_pass_denoise, padding, tileSize, cols, rows, mask_blur):
     p.denoising_strength = seam_pass_denoise
     p.mask_blur = mask_blur
+
+    gradient = Image.linear_gradient("L")
+    mirror_gradient = Image.new("L", (256, 256), "black")
+    mirror_gradient.paste(gradient.resize((256, 128), resample=Image.LANCZOS), (0, 0))
+    mirror_gradient.paste(gradient.rotate(180).resize((256, 128), resample=Image.LANCZOS), (0, 128))
+
+    row_gradient = mirror_gradient.resize((upscaled_img.width, seam_pass_width), resample=Image.LANCZOS)
+    col_gradient = mirror_gradient.rotate(90).resize((seam_pass_width, upscaled_img.height), resample=Image.LANCZOS)
+
     for xi in range(1, cols):
         p.width = seam_pass_width + seam_pass_padding * 2
         p.height = upscaled_img.height
         p.inpaint_full_res = True
         p.inpaint_full_res_padding = seam_pass_padding
         mask = Image.new("L", (upscaled_img.width, upscaled_img.height), "black")
-        draw = ImageDraw.Draw(mask)
-        draw.rectangle((
-            xi * tileSize - seam_pass_width // 2,
-            0,
-            xi * tileSize + seam_pass_width // 2,
-            mask.height
-        ), fill="white")
+        mask.paste(col_gradient, (xi * tileSize - seam_pass_width // 2, 0))
 
         p.init_images = [upscaled_img]
         p.image_mask = mask
@@ -161,13 +164,7 @@ def seam_draw(p, upscaled_img, seam_pass_width, seam_pass_padding, seam_pass_den
         p.inpaint_full_res = True
         p.inpaint_full_res_padding = seam_pass_padding
         mask = Image.new("L", (upscaled_img.width, upscaled_img.height), "black")
-        draw = ImageDraw.Draw(mask)
-        draw.rectangle((
-            0,
-            yi * tileSize - seam_pass_width // 2,
-            mask.width,
-            yi * tileSize + seam_pass_width // 2
-        ), fill="white")
+        mask.paste(row_gradient, (0, yi * tileSize - seam_pass_width // 2))
 
         p.init_images = [upscaled_img]
         p.image_mask = mask
@@ -199,13 +196,14 @@ class Script(scripts.Script):
         with gr.Row():
             offset_pass_enabled = gr.Checkbox(label="Enabled")
             offset_pass_denoise = gr.Slider(label='Denoise', minimum=0, maximum=1, step=0.01, value=0.25)
-            offset_pass_mask_blur = gr.Slider(label='Mask blur', minimum=0, maximum=64, step=1, value=8)
+            offset_pass_mask_blur = gr.Slider(label='Mask blur', minimum=0, maximum=64, step=1, value=4)
             offset_pass_padding = gr.Slider(label='Padding', minimum=0, maximum=128, step=1, value=16)
         gr.HTML("<p style=\"margin-bottom:0.75em\">Seams fix (bands pass):</p>")
         with gr.Row():
             seam_pass_enabled = gr.Checkbox(label="Enabled")
-            seam_pass_width = gr.Slider(label='Width', minimum=0, maximum=128, step=1, value=16)
+            seam_pass_width = gr.Slider(label='Width', minimum=0, maximum=128, step=1, value=64)
             seam_pass_denoise = gr.Slider(label='Denoise', minimum=0, maximum=1, step=0.01, value=0.25)
+            seam_pass_mask_blur = gr.Slider(label='Mask blur', minimum=0, maximum=64, step=1, value=4)
             seam_pass_padding = gr.Slider(label='Padding', minimum=0, maximum=128, step=1, value=32)
         gr.HTML("<p style=\"margin-bottom:0.75em\">Save options:</p>")
         with gr.Row():
@@ -213,11 +211,11 @@ class Script(scripts.Script):
             save_offset_path_image = gr.Checkbox(label="Offset pass", value=False)
             save_seam_path_image = gr.Checkbox(label="Bands path", value=False)
 
-        return [info, tileSize, mask_blur, padding, seam_pass_enabled, seam_pass_width, seam_pass_denoise,
+        return [info, tileSize, mask_blur, padding, seam_pass_enabled, seam_pass_width, seam_pass_denoise, seam_pass_mask_blur,
                 seam_pass_padding, upscaler_index, save_upscaled_image, save_seam_path_image, redraw_enabled,
                 offset_pass_enabled, offset_pass_denoise, offset_pass_padding, save_offset_path_image, offset_pass_mask_blur]
 
-    def run(self, p, _, tileSize, mask_blur, padding, seam_pass_enabled, seam_pass_width, seam_pass_denoise,
+    def run(self, p, _, tileSize, mask_blur, padding, seam_pass_enabled, seam_pass_width, seam_pass_denoise, seam_pass_mask_blur,
             seam_pass_padding, upscaler_index, save_upscaled_image, save_seam_path_image, redraw_enabled,
             offset_pass_enabled, offset_pass_denoise, offset_pass_padding, save_offset_path_image, offset_pass_mask_blur):
         processing.fix_seed(p)
@@ -271,7 +269,7 @@ class Script(scripts.Script):
 
         if seam_pass_enabled:
             print(f"Starting bands pass drawing")
-            result_image = seam_draw(p, result_image, seam_pass_width, seam_pass_padding, seam_pass_denoise, padding, tileSize, cols, rows, mask_blur)
+            result_image = seam_draw(p, result_image, seam_pass_width, seam_pass_padding, seam_pass_denoise, padding, tileSize, cols, rows, seam_pass_mask_blur)
             result_images.append(result_image)
             if save_seam_path_image:
                 images.save_image(result_image, p.outpath_samples, "", seed, p.prompt, opts.grid_format, info=initial_info, p=p)
