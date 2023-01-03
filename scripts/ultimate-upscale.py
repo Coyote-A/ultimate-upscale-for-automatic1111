@@ -89,11 +89,11 @@ def redraw_middle_offset_image(p, upscaled_img, rows, cols, tileSize, padding, o
     # gradient = gradient.resize((tileSize, tileSize//2), resample=Image.LANCZOS)
 
     row_gradient = Image.new("L", (tileSize, tileSize), "black")
-    row_gradient.paste(gradient.resize((tileSize, tileSize//2), resample=Image.LANCZOS), (0, 0))
-    row_gradient.paste(gradient.rotate(180).resize((tileSize, tileSize//2), resample=Image.LANCZOS), (0, tileSize//2))
+    row_gradient.paste(gradient.resize((tileSize, tileSize//2), resample=Image.BICUBIC), (0, 0))
+    row_gradient.paste(gradient.rotate(180).resize((tileSize, tileSize//2), resample=Image.BICUBIC), (0, tileSize//2))
     col_gradient = Image.new("L", (tileSize, tileSize), "black")
-    col_gradient.paste(gradient.rotate(90).resize((tileSize//2, tileSize), resample=Image.LANCZOS), (0, 0))
-    col_gradient.paste(gradient.rotate(270).resize((tileSize//2, tileSize), resample=Image.LANCZOS), (tileSize//2, 0))
+    col_gradient.paste(gradient.rotate(90).resize((tileSize//2, tileSize), resample=Image.BICUBIC), (0, 0))
+    col_gradient.paste(gradient.rotate(270).resize((tileSize//2, tileSize), resample=Image.BICUBIC), (tileSize//2, 0))
 
     p.denoising_strength = offset_pass_denoise
     p.mask_blur = offset_pass_mask_blur
@@ -135,15 +135,15 @@ def redraw_middle_offset_image(p, upscaled_img, rows, cols, tileSize, padding, o
 
 def seam_draw(p, upscaled_img, seam_pass_width, seam_pass_padding, seam_pass_denoise, padding, tileSize, cols, rows, mask_blur):
     p.denoising_strength = seam_pass_denoise
-    p.mask_blur = mask_blur
+    p.mask_blur = 0
 
     gradient = Image.linear_gradient("L")
     mirror_gradient = Image.new("L", (256, 256), "black")
-    mirror_gradient.paste(gradient.resize((256, 128), resample=Image.LANCZOS), (0, 0))
-    mirror_gradient.paste(gradient.rotate(180).resize((256, 128), resample=Image.LANCZOS), (0, 128))
+    mirror_gradient.paste(gradient.resize((256, 128), resample=Image.BICUBIC), (0, 0))
+    mirror_gradient.paste(gradient.rotate(180).resize((256, 128), resample=Image.BICUBIC), (0, 128))
 
-    row_gradient = mirror_gradient.resize((upscaled_img.width, seam_pass_width), resample=Image.LANCZOS)
-    col_gradient = mirror_gradient.rotate(90).resize((seam_pass_width, upscaled_img.height), resample=Image.LANCZOS)
+    row_gradient = mirror_gradient.resize((upscaled_img.width, seam_pass_width), resample=Image.BICUBIC)
+    col_gradient = mirror_gradient.rotate(90).resize((seam_pass_width, upscaled_img.height), resample=Image.BICUBIC)
 
     for xi in range(1, cols):
         p.width = seam_pass_width + seam_pass_padding * 2
@@ -195,27 +195,26 @@ class Script(scripts.Script):
         gr.HTML("<p style=\"margin-bottom:0.75em\">Seams fix (half tile offset pass):</p>")
         with gr.Row():
             offset_pass_enabled = gr.Checkbox(label="Enabled")
-            offset_pass_denoise = gr.Slider(label='Denoise', minimum=0, maximum=1, step=0.01, value=0.25)
+            offset_pass_denoise = gr.Slider(label='Denoise', minimum=0, maximum=1, step=0.01, value=0.35)
             offset_pass_mask_blur = gr.Slider(label='Mask blur', minimum=0, maximum=64, step=1, value=4)
             offset_pass_padding = gr.Slider(label='Padding', minimum=0, maximum=128, step=1, value=16)
         gr.HTML("<p style=\"margin-bottom:0.75em\">Seams fix (bands pass):</p>")
         with gr.Row():
             seam_pass_enabled = gr.Checkbox(label="Enabled")
             seam_pass_width = gr.Slider(label='Width', minimum=0, maximum=128, step=1, value=64)
-            seam_pass_denoise = gr.Slider(label='Denoise', minimum=0, maximum=1, step=0.01, value=0.25)
-            seam_pass_mask_blur = gr.Slider(label='Mask blur', minimum=0, maximum=64, step=1, value=4)
-            seam_pass_padding = gr.Slider(label='Padding', minimum=0, maximum=128, step=1, value=32)
+            seam_pass_denoise = gr.Slider(label='Denoise', minimum=0, maximum=1, step=0.01, value=0.35)
+            seam_pass_padding = gr.Slider(label='Padding', minimum=0, maximum=128, step=1, value=64)
         gr.HTML("<p style=\"margin-bottom:0.75em\">Save options:</p>")
         with gr.Row():
             save_upscaled_image = gr.Checkbox(label="Upscaled", value=True)
             save_offset_path_image = gr.Checkbox(label="Offset pass", value=False)
             save_seam_path_image = gr.Checkbox(label="Bands path", value=False)
 
-        return [info, tileSize, mask_blur, padding, seam_pass_enabled, seam_pass_width, seam_pass_denoise, seam_pass_mask_blur,
+        return [info, tileSize, mask_blur, padding, seam_pass_enabled, seam_pass_width, seam_pass_denoise,
                 seam_pass_padding, upscaler_index, save_upscaled_image, save_seam_path_image, redraw_enabled,
                 offset_pass_enabled, offset_pass_denoise, offset_pass_padding, save_offset_path_image, offset_pass_mask_blur]
 
-    def run(self, p, _, tileSize, mask_blur, padding, seam_pass_enabled, seam_pass_width, seam_pass_denoise, seam_pass_mask_blur,
+    def run(self, p, _, tileSize, mask_blur, padding, seam_pass_enabled, seam_pass_width, seam_pass_denoise,
             seam_pass_padding, upscaler_index, save_upscaled_image, save_seam_path_image, redraw_enabled,
             offset_pass_enabled, offset_pass_denoise, offset_pass_padding, save_offset_path_image, offset_pass_mask_blur):
         processing.fix_seed(p)
@@ -269,7 +268,7 @@ class Script(scripts.Script):
 
         if seam_pass_enabled:
             print(f"Starting bands pass drawing")
-            result_image = seam_draw(p, result_image, seam_pass_width, seam_pass_padding, seam_pass_denoise, padding, tileSize, cols, rows, seam_pass_mask_blur)
+            result_image = seam_draw(p, result_image, seam_pass_width, seam_pass_padding, seam_pass_denoise, padding, tileSize, cols, rows, 0)
             result_images.append(result_image)
             if save_seam_path_image:
                 images.save_image(result_image, p.outpath_samples, "", seed, p.prompt, opts.grid_format, info=initial_info, p=p)
