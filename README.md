@@ -47,24 +47,24 @@ Do not use "Tile grid fix" if image haven't visible grid, it's just another redr
 
 Original image
 
-![Original](2-original.png)
+![Original](https://i.imgur.com/J8mRYOD.png)
 
 2k upscaled. **Tile size**: 512, **Padding**: 32, **Mask blur**: 16
-![2k upscale](3-2k_upscale.png)
+![2k upscale](https://i.imgur.com/0aKua4r.png)
 
 Original image
 
-![Original](4-original.png)
+![Original](https://i.imgur.com/aALNI2w.png)
 
 2k upscaled. **Tile size**: 768, **Padding**: 55, **Mask blur**: 20
-![2k upscale](5-2k_upscale.png)
+![2k upscale](https://i.imgur.com/B5PHz0J.png)
 
 4k upscaled. **Tile size**: 768, **Padding**: 55, **Mask blur**: 20
-![4k upscale](6-4k_upscale.png)
+![4k upscale](https://i.imgur.com/tIUQ7TJ.jpg)
 
 Original image
 
-![Original](7-original.png)
+![Original](https://i.imgur.com/AGtszA8.png)
 
 4k upscaled. **Tile size**: 768, **Padding**: 55, **Mask blur**: 20
-![4k upscale](8-4k_upscale.png)
+![4k upscale](https://i.imgur.com/LCYLfCs.jpg)
