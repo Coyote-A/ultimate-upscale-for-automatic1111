@@ -36,7 +36,17 @@ Or the same settings as for 4k
 
 Recommended upscaler: R-ESRGAN 4x+
 
-Do not use "Tile grid fix" if image haven't visible grid, it's just another redraw on grids borders.
+There are 2 types of seam fix: **half tile offset pass** and **bands pass**
+
+Do not use seam fixes if image haven't visible grid, it's just another redraw passes.
+
+### Half tile offset pass
+It adds 2 passes like redraw pass, but with a half-tile offset. One pass for rows with vertical gradient mask and one pass for columns with horizontal gradient mask.
+
+This pass covers bigger area than bands and mostly produces better result, but require more time.
+
+## Bands pass
+It adds passes on just seams (rows and columns) and covers small area around them (*width* in ui). It requires less time than offset pass.
 
 # How to enable 4096 img width and height
 1. Go to sd-webui folder
