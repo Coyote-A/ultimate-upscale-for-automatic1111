@@ -49,22 +49,22 @@ Original image
 
 ![Original](https://i.imgur.com/J8mRYOD.png)
 
-2k upscaled. **Tile size**: 512, **Padding**: 32, **Mask blur**: 16
+2k upscaled. **Tile size**: 512, **Padding**: 32, **Mask blur**: 16, **Denoise**: 0.4
 ![2k upscale](https://i.imgur.com/0aKua4r.png)
 
 Original image
 
 ![Original](https://i.imgur.com/aALNI2w.png)
 
-2k upscaled. **Tile size**: 768, **Padding**: 55, **Mask blur**: 20
+2k upscaled. **Tile size**: 768, **Padding**: 55, **Mask blur**: 20, **Denoise**: 0.35
 ![2k upscale](https://i.imgur.com/B5PHz0J.png)
 
-4k upscaled. **Tile size**: 768, **Padding**: 55, **Mask blur**: 20
+4k upscaled. **Tile size**: 768, **Padding**: 55, **Mask blur**: 20, **Denoise**: 0.35
 ![4k upscale](https://i.imgur.com/tIUQ7TJ.jpg)
 
 Original image
 
 ![Original](https://i.imgur.com/AGtszA8.png)
 
-4k upscaled. **Tile size**: 768, **Padding**: 55, **Mask blur**: 20
+4k upscaled. **Tile size**: 768, **Padding**: 55, **Mask blur**: 20, **Denoise**: 0.4
 ![4k upscale](https://i.imgur.com/LCYLfCs.jpg)
