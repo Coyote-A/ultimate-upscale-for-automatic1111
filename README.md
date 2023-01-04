@@ -18,7 +18,7 @@ Enable redraw if it disabled. Select tile size, change padding and mask blur.
 
 Select upscaler. If you don't want to use the upscaler it's ok, but the image will be blurry.
 
-If a tile grid is visible on your image, then you can run the image through "Tile grid fix". Just send it to img2img, enable them and disable redraw. Set upscaler to None.
+If a tile grid is visible on your image, then you can run the image through "Sems fix". Just send it to img2img, enable them and disable redraw. Set upscaler to None.
 
 # Some recommendations
 
@@ -45,7 +45,7 @@ It adds 2 passes like redraw pass, but with a half-tile offset. One pass for row
 
 This pass covers bigger area than bands and mostly produces better result, but require more time.
 
-## Bands pass
+### Bands pass
 It adds passes on just seams (rows and columns) and covers small area around them (*width* in ui). It requires less time than offset pass.
 
 # How to enable 4096 img width and height
