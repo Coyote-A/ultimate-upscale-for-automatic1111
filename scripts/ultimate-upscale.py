@@ -212,9 +212,10 @@ class Script(scripts.Script):
         def select_fix_type(fix_index):
             all_visible = fix_index != 0
             mask_blur_visible = fix_index == 2
+            width_visible = fix_index == 1
 
             return [gr.update(visible=all_visible),
-                    gr.update(visible=all_visible),
+                    gr.update(visible=width_visible),
                     gr.update(visible=mask_blur_visible),
                     gr.update(visible=all_visible)]
 
