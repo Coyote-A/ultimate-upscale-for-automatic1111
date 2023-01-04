@@ -200,16 +200,31 @@ class Script(scripts.Script):
         gr.HTML("<p style=\"margin-bottom:0.75em\">Seams fix:</p>")
         with gr.Row():
             seams_fix_type = gr.Dropdown(label="Type", choices=[k for k in seams_fix_types], type="index", value=next(iter(seams_fix_types)))
-            seams_fix_denoise = gr.Slider(label='Denoise', minimum=0, maximum=1, step=0.01, value=0.35)
-            seams_fix_width = gr.Slider(label='Width', minimum=0, maximum=128, step=1, value=64)
-            seams_fix_mask_blur = gr.Slider(label='Mask blur', minimum=0, maximum=64, step=1, value=4)
-            seams_fix_padding = gr.Slider(label='Padding', minimum=0, maximum=128, step=1, value=16)
+            seams_fix_denoise = gr.Slider(label='Denoise', minimum=0, maximum=1, step=0.01, value=0.35, visible=False, interactive=True)
+            seams_fix_width = gr.Slider(label='Width', minimum=0, maximum=128, step=1, value=64, visible=False, interactive=True)
+            seams_fix_mask_blur = gr.Slider(label='Mask blur', minimum=0, maximum=64, step=1, value=4, visible=False, interactive=True)
+            seams_fix_padding = gr.Slider(label='Padding', minimum=0, maximum=128, step=1, value=16, visible=False, interactive=True)
         gr.HTML("<p style=\"margin-bottom:0.75em\">Save options:</p>")
         with gr.Row():
             save_upscaled_image = gr.Checkbox(label="Upscaled", value=True)
             save_seams_fix_image = gr.Checkbox(label="Seams fix", value=False)
 
-        return [info, tileSize, mask_blur, padding, seams_fix_width, seams_fix_denoise, seams_fix_padding, 
+        def select_fix_type(fix_index):
+            all_visible = fix_index != 0
+            mask_blur_visible = fix_index == 2
+
+            return [gr.update(visible=all_visible),
+                    gr.update(visible=all_visible),
+                    gr.update(visible=mask_blur_visible),
+                    gr.update(visible=all_visible)]
+
+        seams_fix_type.change(
+            fn=select_fix_type,
+            inputs=seams_fix_type,
+            outputs=[seams_fix_denoise, seams_fix_width, seams_fix_mask_blur, seams_fix_padding]
+        )
+
+        return [info, tileSize, mask_blur, padding, seams_fix_width, seams_fix_denoise, seams_fix_padding,
                 upscaler_index, save_upscaled_image, redraw_enabled, save_seams_fix_image, seams_fix_mask_blur, 
                 seams_fix_type]
 
