@@ -7,8 +7,9 @@ from PIL import Image, ImageDraw
 from modules import processing, shared, sd_samplers, images, devices
 from modules.processing import Processed
 from modules.shared import opts, cmd_opts, state
+from collections import namedtuple
 
-def getFactor(num):
+def get_factor(num):
     if num == 1:
         return 2
     if num % 4 == 0:
@@ -19,7 +20,7 @@ def getFactor(num):
         return 2
     return 0
 
-def upscale(p, init_img, upscaler_index, tileSize, padding):
+def upscale(p, init_img, upscaler_index, padding):
     scale_factor = max(p.width, p.height) // max(init_img.width, init_img.height)
     print(f"Canva size: {p.width}x{p.height}")
     print(f"Image size: {init_img.width}x{init_img.height}")
@@ -30,22 +31,19 @@ def upscale(p, init_img, upscaler_index, tileSize, padding):
     p.extra_generation_params["SD upscale overlap"] = padding
     p.extra_generation_params["SD upscale upscaler"] = upscaler.name
 
-    initial_info = None
-    seed = p.seed
-
     upscaled_img = init_img
     if upscaler.name == "None":
         return upscaled_img.resize((p.width, p.height), resample=Image.LANCZOS)
     
     current_scale = 1
     iteration = 0
-    current_scale_factor = getFactor(scale_factor)
+    current_scale_factor = get_factor(scale_factor)
     while current_scale_factor == 0:
         scale_factor += 1
-        current_scale_factor = getFactor(scale_factor)
+        current_scale_factor = get_factor(scale_factor)
     while current_scale < scale_factor:
         iteration += 1
-        current_scale_factor = getFactor(scale_factor // current_scale)
+        current_scale_factor = get_factor(scale_factor // current_scale)
         current_scale = current_scale * current_scale_factor
         if current_scale_factor == 0:
             break
@@ -55,21 +53,21 @@ def upscale(p, init_img, upscaler_index, tileSize, padding):
     return upscaled_img.resize((p.width, p.height), resample=Image.LANCZOS)
 
 
-def redraw_image(p, upscaled_img, rows, cols, tileSize, padding):
+def redraw_image(p, upscaled_img, rows, cols, tile_size, padding):
     initial_info = None
     for yi in range(rows):
         for xi in range(cols):
-            p.width = tileSize
-            p.height = tileSize
+            p.width = tile_size
+            p.height = tile_size
             p.inpaint_full_res = True
             p.inpaint_full_res_padding = padding
             mask = Image.new("L", (upscaled_img.width, upscaled_img.height), "black")
             draw = ImageDraw.Draw(mask)
             draw.rectangle((
-                xi * tileSize,
-                yi * tileSize,
-                xi * tileSize + tileSize,
-                yi * tileSize + tileSize
+                xi * tile_size,
+                yi * tile_size,
+                xi * tile_size + tile_size,
+                yi * tile_size + tile_size
             ), fill="white")
 
             p.init_images = [upscaled_img]
@@ -82,28 +80,28 @@ def redraw_image(p, upscaled_img, rows, cols, tileSize, padding):
     return upscaled_img, initial_info
 
 
-def redraw_middle_offset_image(p, upscaled_img, rows, cols, tileSize, padding, seams_fix_denoise, seams_fix_mask_blur):
+def redraw_middle_offset_image(p, upscaled_img, rows, cols, tile_size, padding, seams_fix_denoise, seams_fix_mask_blur):
     initial_info = None
     gradient = Image.linear_gradient("L")
 
-    row_gradient = Image.new("L", (tileSize, tileSize), "black")
-    row_gradient.paste(gradient.resize((tileSize, tileSize//2), resample=Image.BICUBIC), (0, 0))
-    row_gradient.paste(gradient.rotate(180).resize((tileSize, tileSize//2), resample=Image.BICUBIC), (0, tileSize//2))
-    col_gradient = Image.new("L", (tileSize, tileSize), "black")
-    col_gradient.paste(gradient.rotate(90).resize((tileSize//2, tileSize), resample=Image.BICUBIC), (0, 0))
-    col_gradient.paste(gradient.rotate(270).resize((tileSize//2, tileSize), resample=Image.BICUBIC), (tileSize//2, 0))
+    row_gradient = Image.new("L", (tile_size, tile_size), "black")
+    row_gradient.paste(gradient.resize((tile_size, tile_size//2), resample=Image.BICUBIC), (0, 0))
+    row_gradient.paste(gradient.rotate(180).resize((tile_size, tile_size//2), resample=Image.BICUBIC), (0, tile_size//2))
+    col_gradient = Image.new("L", (tile_size, tile_size), "black")
+    col_gradient.paste(gradient.rotate(90).resize((tile_size//2, tile_size), resample=Image.BICUBIC), (0, 0))
+    col_gradient.paste(gradient.rotate(270).resize((tile_size//2, tile_size), resample=Image.BICUBIC), (tile_size//2, 0))
 
     p.denoising_strength = seams_fix_denoise
     p.mask_blur = seams_fix_mask_blur
 
     for yi in range(rows-1):
         for xi in range(cols):
-            p.width = tileSize
-            p.height = tileSize
+            p.width = tile_size
+            p.height = tile_size
             p.inpaint_full_res = True
             p.inpaint_full_res_padding = padding
             mask = Image.new("L", (upscaled_img.width, upscaled_img.height), "black")
-            mask.paste(row_gradient, (xi*tileSize, yi*tileSize + tileSize//2))
+            mask.paste(row_gradient, (xi*tile_size, yi*tile_size + tile_size//2))
 
             p.init_images = [upscaled_img]
             p.image_mask = mask
@@ -114,12 +112,12 @@ def redraw_middle_offset_image(p, upscaled_img, rows, cols, tileSize, padding, s
 
     for yi in range(rows):
         for xi in range(cols-1):
-            p.width = tileSize
-            p.height = tileSize
+            p.width = tile_size
+            p.height = tile_size
             p.inpaint_full_res = True
             p.inpaint_full_res_padding = padding
             mask = Image.new("L", (upscaled_img.width, upscaled_img.height), "black")
-            mask.paste(col_gradient, (xi*tileSize+tileSize//2, yi*tileSize))
+            mask.paste(col_gradient, (xi*tile_size+tile_size//2, yi*tile_size))
 
             p.init_images = [upscaled_img]
             p.image_mask = mask
@@ -131,7 +129,7 @@ def redraw_middle_offset_image(p, upscaled_img, rows, cols, tileSize, padding, s
     return upscaled_img, initial_info
 
 
-def seam_draw(p, upscaled_img, seams_fix_width, seams_fix_padding, seams_fix_denoise, padding, tileSize, cols, rows, mask_blur):
+def seam_draw(p, upscaled_img, seams_fix_width, seams_fix_padding, seams_fix_denoise, tile_size, cols, rows):
     p.denoising_strength = seams_fix_denoise
     p.mask_blur = 0
 
@@ -149,7 +147,7 @@ def seam_draw(p, upscaled_img, seams_fix_width, seams_fix_padding, seams_fix_den
         p.inpaint_full_res = True
         p.inpaint_full_res_padding = seams_fix_padding
         mask = Image.new("L", (upscaled_img.width, upscaled_img.height), "black")
-        mask.paste(col_gradient, (xi * tileSize - seams_fix_width // 2, 0))
+        mask.paste(col_gradient, (xi * tile_size - seams_fix_width // 2, 0))
 
         p.init_images = [upscaled_img]
         p.image_mask = mask
@@ -162,7 +160,7 @@ def seam_draw(p, upscaled_img, seams_fix_width, seams_fix_padding, seams_fix_den
         p.inpaint_full_res = True
         p.inpaint_full_res_padding = seams_fix_padding
         mask = Image.new("L", (upscaled_img.width, upscaled_img.height), "black")
-        mask.paste(row_gradient, (0, yi * tileSize - seams_fix_width // 2))
+        mask.paste(row_gradient, (0, yi * tile_size - seams_fix_width // 2))
 
         p.init_images = [upscaled_img]
         p.image_mask = mask
@@ -170,7 +168,6 @@ def seam_draw(p, upscaled_img, seams_fix_width, seams_fix_padding, seams_fix_den
         if (len(processed.images) > 0):
             upscaled_img = processed.images[0]
     return upscaled_img
-
 
 class Script(scripts.Script):
     def title(self):
@@ -192,7 +189,7 @@ class Script(scripts.Script):
         gr.HTML("<p style=\"margin-bottom:0.75em\">Redraw options:</p>")
         with gr.Row():
             redraw_enabled = gr.Checkbox(label="Enabled", value=True)
-            tileSize = gr.Slider(minimum=256, maximum=2048, step=64, label='Tile size', value=512)
+            tile_size = gr.Slider(minimum=256, maximum=2048, step=64, label='Tile size', value=512)
             mask_blur = gr.Slider(label='Mask blur', minimum=0, maximum=64, step=1, value=8)
             padding = gr.Slider(label='Padding', minimum=0, maximum=128, step=1, value=32)
         upscaler_index = gr.Radio(label='Upscaler', choices=[x.name for x in shared.sd_upscalers],
@@ -225,15 +222,15 @@ class Script(scripts.Script):
             outputs=[seams_fix_denoise, seams_fix_width, seams_fix_mask_blur, seams_fix_padding]
         )
 
-        return [info, tileSize, mask_blur, padding, seams_fix_width, seams_fix_denoise, seams_fix_padding,
+        return [info, tile_size, mask_blur, padding, seams_fix_width, seams_fix_denoise, seams_fix_padding,
                 upscaler_index, save_upscaled_image, redraw_enabled, save_seams_fix_image, seams_fix_mask_blur, 
                 seams_fix_type]
 
-    def run(self, p, _, tileSize, mask_blur, padding, seams_fix_width, seams_fix_denoise, seams_fix_padding, 
+    def run(self, p, _, tile_size, mask_blur, padding, seams_fix_width, seams_fix_denoise, seams_fix_padding, 
             upscaler_index, save_upscaled_image, redraw_enabled, save_seams_fix_image, seams_fix_mask_blur, 
             seams_fix_type):
         processing.fix_seed(p)
-        p.extra_generation_params["SD upscale tileSize"] = tileSize
+        p.extra_generation_params["SD upscale tileSize"] = tile_size
         p.mask_blur = mask_blur
         seed = p.seed
 
@@ -243,7 +240,7 @@ class Script(scripts.Script):
         init_img = images.flatten(init_img, opts.img2img_background_color)
 
         # Upscaling
-        upscaled_img = upscale(p, init_img, upscaler_index, tileSize, padding)
+        upscaled_img = upscale(p, init_img, upscaler_index, padding)
 
         # Drawing
         devices.torch_gc()
@@ -253,8 +250,8 @@ class Script(scripts.Script):
 
         p.inpaint_full_res = False
 
-        rows = math.ceil(p.height / tileSize)
-        cols = math.ceil(p.width / tileSize)
+        rows = math.ceil(p.height / tile_size)
+        cols = math.ceil(p.width / tile_size)
 
         print(f"Tiles amount: {rows * cols}")
         print(f"Grid: {rows}x{cols}")
@@ -269,21 +266,21 @@ class Script(scripts.Script):
         result_images = []
         result_image = upscaled_img
         if redraw_enabled:
-            result_image, initial_info = redraw_image(p, upscaled_img, rows, cols, tileSize, padding)
+            result_image, initial_info = redraw_image(p, upscaled_img, rows, cols, tile_size, padding)
         result_images.append(result_image)
         if save_upscaled_image:
             images.save_image(result_image, p.outpath_samples, "", seed, p.prompt, opts.grid_format, info=initial_info, p=p)
 
         if seams_fix_type == 2:
             print(f"Starting offset pass drawing")
-            result_image, initial_info = redraw_middle_offset_image(p, result_image, rows, cols, tileSize, seams_fix_padding, seams_fix_denoise, seams_fix_mask_blur)
+            result_image, initial_info = redraw_middle_offset_image(p, result_image, rows, cols, tile_size, seams_fix_padding, seams_fix_denoise, seams_fix_mask_blur)
             result_images.append(result_image)
             if save_seams_fix_image:
                 images.save_image(result_image, p.outpath_samples, "", seed, p.prompt, opts.grid_format, info=initial_info, p=p)
 
         if seams_fix_type == 1:
             print(f"Starting bands pass drawing")
-            result_image = seam_draw(p, result_image, seams_fix_width, seams_fix_padding, seams_fix_denoise, padding, tileSize, cols, rows, 0)
+            result_image = seam_draw(p, result_image, seams_fix_width, seams_fix_padding, seams_fix_denoise, tile_size, cols, rows)
             result_images.append(result_image)
             if save_seams_fix_image:
                 images.save_image(result_image, p.outpath_samples, "", seed, p.prompt, opts.grid_format, info=initial_info, p=p)
