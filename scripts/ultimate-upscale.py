@@ -9,6 +9,8 @@ from enum import Enum
 
 class USDUMode(Enum):
     LINEAR = 0
+    CHESS = 1
+    NONE = 2
 
 class USDUSFMode(Enum):
     NONE = 0
@@ -77,8 +79,9 @@ class USDUpscaler():
         # Resize image to set values
         self.image = self.image.resize((self.p.width, self.p.height), resample=Image.LANCZOS)
 
-    def setup_redraw(self, enabled, padding, mask_blur):
-        self.redraw.enabled = enabled
+    def setup_redraw(self, redraw_mode, padding, mask_blur):
+        self.redraw.mode = USDUMode(redraw_mode)
+        self.redraw.enabled = self.redraw.mode != USDUMode.NONE
         self.redraw.padding = padding
         self.p.mask_blur = mask_blur
 
@@ -132,6 +135,15 @@ class USDUpscaler():
 
 class USDURedraw():
 
+    def init_draw(self, p, width, height):
+        p.inpaint_full_res = True
+        p.inpaint_full_res_padding = self.padding
+        p.width = self.tile_size
+        p.height = self.tile_size
+        mask = Image.new("L", (width, height), "black")
+        draw = ImageDraw.Draw(mask)
+        return mask, draw
+
     def calc_rectangle(self, xi, yi):
         x1 = xi * self.tile_size
         y1 = yi * self.tile_size
@@ -141,12 +153,7 @@ class USDURedraw():
         return x1, y1, x2, y2
 
     def linear_process(self, p, image, rows, cols):
-        p.inpaint_full_res = True
-        p.inpaint_full_res_padding = self.padding
-        p.width = self.tile_size
-        p.height = self.tile_size
-        mask = Image.new("L", (image.width, image.height), "black")
-        draw = ImageDraw.Draw(mask)
+        mask, draw = self.init_draw(p, image.width, image.height)
         for yi in range(rows):
             for xi in range(cols):
                 draw.rectangle(self.calc_rectangle(xi, yi), fill="white")
@@ -159,9 +166,55 @@ class USDURedraw():
                     image = processed.images[0]
         return image
 
+    def chess_process(self, p, image, rows, cols):
+        mask, draw = self.init_draw(p, image.width, image.height)
+        tiles = []
+        # calc tiles colors
+        for yi in range(rows):
+            for xi in range(cols):
+                if xi == 0:
+                    tiles.append([])
+                color = xi % 2 == 0
+                if yi > 0 and yi % 2 == 0:
+                    color = not color
+                tiles[yi].append(color)
+
+        for yi in range(len(tiles)):
+            for xi in range(len(tiles[yi])):
+                if not tiles[yi][xi]:
+                    tiles[yi][xi] = not tiles[yi][xi]
+                    continue
+                tiles[yi][xi] = not tiles[yi][xi]
+                draw.rectangle(self.calc_rectangle(xi, yi), fill="white")
+                p.init_images = [image]
+                p.image_mask = mask
+                processed = processing.process_images(p)
+                draw.rectangle(self.calc_rectangle(xi, yi), fill="black")
+                self.initial_info = processed.info
+                if (len(processed.images) > 0):
+                    image = processed.images[0]
+
+        for yi in range(len(tiles)):
+            for xi in range(len(tiles[yi])):
+                if not tiles[yi][xi]:
+                    continue
+                draw.rectangle(self.calc_rectangle(xi, yi), fill="white")
+                p.init_images = [image]
+                p.image_mask = mask
+                processed = processing.process_images(p)
+                draw.rectangle(self.calc_rectangle(xi, yi), fill="black")
+                self.initial_info = processed.info
+                if (len(processed.images) > 0):
+                    image = processed.images[0]
+
+        return image
+
     def start(self, p, image, rows, cols):
         self.initial_info = None
-        return self.linear_process(p, image, rows, cols)
+        if self.mode == USDUMode.LINEAR:
+            return self.linear_process(p, image, rows, cols)
+        if self.mode == USDUMode.CHESS:
+            return self.chess_process(p, image, rows, cols)
 
 class USDUSeamsFix():
 
@@ -281,6 +334,12 @@ class Script(scripts.Script):
             "Band pass", 
             "Half tile offset pass"
         ]
+
+        redrow_modes = [
+            "Linear",
+            "Chess",
+            "None"
+        ]
         
         info = gr.HTML(
             "<p style=\"margin-bottom:0.75em\">Will upscale the image to selected with and height</p>")
@@ -289,7 +348,7 @@ class Script(scripts.Script):
             upscaler_index = gr.Radio(label='Upscaler', choices=[x.name for x in shared.sd_upscalers],
                                 value=shared.sd_upscalers[0].name, type="index")
         with gr.Row():
-            redraw_enabled = gr.Checkbox(label="Enabled", value=True)
+            redraw_mode = gr.Dropdown(label="Type", choices=[k for k in redrow_modes], type="index", value=next(iter(redrow_modes)))
             tile_size = gr.Slider(minimum=256, maximum=2048, step=64, label='Tile size', value=512)
             mask_blur = gr.Slider(label='Mask blur', minimum=0, maximum=64, step=1, value=8)
             padding = gr.Slider(label='Padding', minimum=0, maximum=128, step=1, value=32)
@@ -322,11 +381,11 @@ class Script(scripts.Script):
         )
 
         return [info, tile_size, mask_blur, padding, seams_fix_width, seams_fix_denoise, seams_fix_padding,
-                upscaler_index, save_upscaled_image, redraw_enabled, save_seams_fix_image, seams_fix_mask_blur, 
+                upscaler_index, save_upscaled_image, redraw_mode, save_seams_fix_image, seams_fix_mask_blur, 
                 seams_fix_type]
 
     def run(self, p, _, tile_size, mask_blur, padding, seams_fix_width, seams_fix_denoise, seams_fix_padding, 
-            upscaler_index, save_upscaled_image, redraw_enabled, save_seams_fix_image, seams_fix_mask_blur, 
+            upscaler_index, save_upscaled_image, redraw_mode, save_seams_fix_image, seams_fix_mask_blur, 
             seams_fix_type):
 
         # Init
@@ -348,7 +407,7 @@ class Script(scripts.Script):
         upscaler.upscale()
         
         # Drawing
-        upscaler.setup_redraw(redraw_enabled, padding, mask_blur)
+        upscaler.setup_redraw(redraw_mode, padding, mask_blur)
         upscaler.setup_seams_fix(seams_fix_padding, seams_fix_denoise, seams_fix_mask_blur, seams_fix_width, seams_fix_type)
         upscaler.calc_jobs_count()
         upscaler.print_info()
