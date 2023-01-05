@@ -156,6 +156,8 @@ class USDURedraw():
         mask, draw = self.init_draw(p, image.width, image.height)
         for yi in range(rows):
             for xi in range(cols):
+                if state.interrupted:
+                    break
                 draw.rectangle(self.calc_rectangle(xi, yi), fill="white")
                 p.init_images = [image]
                 p.image_mask = mask
@@ -172,6 +174,8 @@ class USDURedraw():
         # calc tiles colors
         for yi in range(rows):
             for xi in range(cols):
+                if state.interrupted:
+                    break
                 if xi == 0:
                     tiles.append([])
                 color = xi % 2 == 0
@@ -181,6 +185,8 @@ class USDURedraw():
 
         for yi in range(len(tiles)):
             for xi in range(len(tiles[yi])):
+                if state.interrupted:
+                    break
                 if not tiles[yi][xi]:
                     tiles[yi][xi] = not tiles[yi][xi]
                     continue
@@ -196,6 +202,8 @@ class USDURedraw():
 
         for yi in range(len(tiles)):
             for xi in range(len(tiles[yi])):
+                if state.interrupted:
+                    break
                 if not tiles[yi][xi]:
                     continue
                 draw.rectangle(self.calc_rectangle(xi, yi), fill="white")
@@ -238,6 +246,8 @@ class USDUSeamsFix():
 
         for yi in range(rows-1):
             for xi in range(cols):
+                if state.interrupted:
+                    break
                 p.width = self.tile_size
                 p.height = self.tile_size
                 p.inpaint_full_res = True
@@ -254,6 +264,8 @@ class USDUSeamsFix():
 
         for yi in range(rows):
             for xi in range(cols-1):
+                if state.interrupted:
+                    break
                 p.width = self.tile_size
                 p.height = self.tile_size
                 p.inpaint_full_res = True
@@ -283,6 +295,8 @@ class USDUSeamsFix():
         col_gradient = mirror_gradient.rotate(90).resize((self.width, image.height), resample=Image.BICUBIC)
 
         for xi in range(1, cols):
+            if state.interrupted:
+                    break
             p.width = self._width + self.padding * 2
             p.height = image.height
             p.inpaint_full_res = True
@@ -296,6 +310,8 @@ class USDUSeamsFix():
             if (len(processed.images) > 0):
                 image = processed.images[0]
         for yi in range(1, rows):
+            if state.interrupted:
+                    break
             p.width = image.width
             p.height = self.width + self.padding * 2
             p.inpaint_full_res = True
