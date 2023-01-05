@@ -179,7 +179,7 @@ class USDURedraw():
                 if xi == 0:
                     tiles.append([])
                 color = xi % 2 == 0
-                if yi > 0 and yi % 2 == 0:
+                if yi > 0 and yi % 2 != 0:
                     color = not color
                 tiles[yi].append(color)
 
