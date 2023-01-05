@@ -416,6 +416,8 @@ class Script(scripts.Script):
 
         # Init image
         init_img = p.init_images[0]
+        if init_img == None:
+            return Processed(p, [], seed, "Empty image")
         init_img = images.flatten(init_img, opts.img2img_background_color)
 
         # Upscaling
