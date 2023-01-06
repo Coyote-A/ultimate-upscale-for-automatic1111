@@ -345,6 +345,12 @@ class Script(scripts.Script):
 
     def ui(self, is_img2img):
 
+        target_size_types = [
+            "From img2img2 settings",
+            "Custom size",
+            "Scale from image size"
+        ]
+
         seams_fix_types = [
             "None",
             "Band pass", 
@@ -358,7 +364,16 @@ class Script(scripts.Script):
         ]
         
         info = gr.HTML(
-            "<p style=\"margin-bottom:0.75em\">Will upscale the image to selected with and height</p>")
+            "<p style=\"margin-bottom:0.75em\">Will upscale the image depending on the selected target size type</p>")
+
+        with gr.Row():
+            target_size_type = gr.Dropdown(label="Target size type", choices=[k for k in target_size_types], type="index",
+                                  value=next(iter(target_size_types)))
+
+            custom_width = gr.Slider(label='Custom width', minimum=64, maximum=8192, step=64, value=2048, visible=False, interactive=True)
+            custom_height = gr.Slider(label='Custom height', minimum=64, maximum=8192, step=64, value=2048, visible=False, interactive=True)
+            custom_scale = gr.Slider(label='Scale', minimum=1, maximum=16, step=1, value=2, visible=False, interactive=True)
+
         gr.HTML("<p style=\"margin-bottom:0.75em\">Redraw options:</p>")
         with gr.Row():
             upscaler_index = gr.Radio(label='Upscaler', choices=[x.name for x in shared.sd_upscalers],
@@ -396,13 +411,28 @@ class Script(scripts.Script):
             outputs=[seams_fix_denoise, seams_fix_width, seams_fix_mask_blur, seams_fix_padding]
         )
 
+        def select_scale_type(scale_index):
+            is_custom_size = scale_index == 1
+            is_custom_scale = scale_index == 2
+
+            return [gr.update(visible=is_custom_size),
+                    gr.update(visible=is_custom_size),
+                    gr.update(visible=is_custom_scale),
+                    ]
+
+        target_size_type.change(
+            fn=select_scale_type,
+            inputs=target_size_type,
+            outputs=[custom_width, custom_height, custom_scale]
+        )
+
         return [info, tile_size, mask_blur, padding, seams_fix_width, seams_fix_denoise, seams_fix_padding,
                 upscaler_index, save_upscaled_image, redraw_mode, save_seams_fix_image, seams_fix_mask_blur, 
-                seams_fix_type]
+                seams_fix_type, target_size_type, custom_width, custom_height, custom_scale]
 
     def run(self, p, _, tile_size, mask_blur, padding, seams_fix_width, seams_fix_denoise, seams_fix_padding, 
             upscaler_index, save_upscaled_image, redraw_mode, save_seams_fix_image, seams_fix_mask_blur, 
-            seams_fix_type):
+            seams_fix_type, target_size_type, custom_width, custom_height, custom_scale):
 
         # Init
         processing.fix_seed(p)
@@ -419,6 +449,14 @@ class Script(scripts.Script):
         if init_img == None:
             return Processed(p, [], seed, "Empty image")
         init_img = images.flatten(init_img, opts.img2img_background_color)
+
+        #override size
+        if target_size_type == 1:
+            p.width = custom_width
+            p.height = custom_height
+        if target_size_type == 2:
+            p.width = init_img.width * custom_scale
+            p.height = init_img.height * custom_scale
 
         # Upscaling
         upscaler = USDUpscaler(p, init_img, upscaler_index, save_upscaled_image, save_seams_fix_image, tile_size)

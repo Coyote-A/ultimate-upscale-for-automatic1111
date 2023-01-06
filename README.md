@@ -49,9 +49,8 @@ This pass covers bigger area than bands and mostly produces better result, but r
 It adds passes on just seams (rows and columns) and covers small area around them (*width* in ui). It requires less time than offset pass.
 
 # How to enable 4096 img width and height
-1. Go to sd-webui folder
-2. Find ui-config.json
-3. Change all 2048 to 4096
+1. Select **Custom size** in **Target size type**
+2. Set **custom width** and **custom height** to 4096
 
 # Examples
 
