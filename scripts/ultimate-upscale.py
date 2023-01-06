@@ -163,9 +163,13 @@ class USDURedraw():
                 p.image_mask = mask
                 processed = processing.process_images(p)
                 draw.rectangle(self.calc_rectangle(xi, yi), fill="black")
-                self.initial_info = processed.info
                 if (len(processed.images) > 0):
                     image = processed.images[0]
+
+        p.width = image.width
+        p.height = image.height
+        self.initial_info = processed.infotext(p, 0)
+        
         return image
 
     def chess_process(self, p, image, rows, cols):
@@ -196,7 +200,6 @@ class USDURedraw():
                 p.image_mask = mask
                 processed = processing.process_images(p)
                 draw.rectangle(self.calc_rectangle(xi, yi), fill="black")
-                self.initial_info = processed.info
                 if (len(processed.images) > 0):
                     image = processed.images[0]
 
@@ -211,9 +214,12 @@ class USDURedraw():
                 p.image_mask = mask
                 processed = processing.process_images(p)
                 draw.rectangle(self.calc_rectangle(xi, yi), fill="black")
-                self.initial_info = processed.info
                 if (len(processed.images) > 0):
                     image = processed.images[0]
+
+        p.width = image.width
+        p.height = image.height
+        self.initial_info = processed.infotext(p, 0)
 
         return image
 
@@ -258,7 +264,6 @@ class USDUSeamsFix():
                 p.init_images = [image]
                 p.image_mask = mask
                 processed = processing.process_images(p)
-                self.initial_info = processed.info
                 if (len(processed.images) > 0):
                     image = processed.images[0]
 
@@ -276,9 +281,12 @@ class USDUSeamsFix():
                 p.init_images = [image]
                 p.image_mask = mask
                 processed = processing.process_images(p)
-                self.initial_info = processed.info
                 if (len(processed.images) > 0):
                     image = processed.images[0]
+
+        p.width = image.width
+        p.height = image.height
+        self.initial_info = processed.infotext(p, 0)
 
         return image
 
@@ -322,9 +330,12 @@ class USDUSeamsFix():
             p.init_images = [image]
             p.image_mask = mask
             processed = processing.process_images(p)
-            self.initial_info = processed.info
             if (len(processed.images) > 0):
                 image = processed.images[0]
+
+        p.width = image.width
+        p.height = image.height
+        self.initial_info = processed.infotext(p, 0)
 
         return image
 
