@@ -169,7 +169,7 @@ class USDURedraw():
         p.width = image.width
         p.height = image.height
         self.initial_info = processed.infotext(p, 0)
-        
+
         return image
 
     def chess_process(self, p, image, rows, cols):
@@ -232,8 +232,15 @@ class USDURedraw():
 
 class USDUSeamsFix():
 
-    def half_tile_process(self, p, image, rows, cols):
+    def init_draw(self, p):
         self.initial_info = None
+        p.width = self.tile_size
+        p.height = self.tile_size
+
+    def half_tile_process(self, p, image, rows, cols):
+        
+        self.init_draw(p)
+
         gradient = Image.linear_gradient("L")
         row_gradient = Image.new("L", (self.tile_size, self.tile_size), "black")
         row_gradient.paste(gradient.resize(
@@ -291,6 +298,9 @@ class USDUSeamsFix():
         return image
 
     def band_pass_process(self, p, image, cols, rows):
+        
+        self.init_draw(p)
+
         p.denoising_strength = self.denoise
         p.mask_blur = 0
 
