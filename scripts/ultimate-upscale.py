@@ -393,7 +393,7 @@ class Script(scripts.Script):
 
             custom_width = gr.Slider(label='Custom width', minimum=64, maximum=8192, step=64, value=2048, visible=False, interactive=True)
             custom_height = gr.Slider(label='Custom height', minimum=64, maximum=8192, step=64, value=2048, visible=False, interactive=True)
-            custom_scale = gr.Slider(label='Scale', minimum=1, maximum=16, step=1, value=2, visible=False, interactive=True)
+            custom_scale = gr.Slider(label='Scale', minimum=1, maximum=16, step=0.01, value=2, visible=False, interactive=True)
 
         gr.HTML("<p style=\"margin-bottom:0.75em\">Redraw options:</p>")
         with gr.Row():
@@ -476,8 +476,8 @@ class Script(scripts.Script):
             p.width = custom_width
             p.height = custom_height
         if target_size_type == 2:
-            p.width = init_img.width * custom_scale
-            p.height = init_img.height * custom_scale
+            p.width = math.ceil((init_img.width * custom_scale) / 64) * 64
+            p.height = math.ceil((init_img.height * custom_scale) / 64) * 64
 
         # Upscaling
         upscaler = USDUpscaler(p, init_img, upscaler_index, save_upscaled_image, save_seams_fix_image, tile_size)
