@@ -12,6 +12,9 @@ Now you have the opportunity to use a large denoise (0.3-0.5) and not spawn many
 # How to use
 Send image to img2img, in "Script" field select "Ultimate SD upscale". The width and height of the future image is selected through the default slider.
 
+Set **Denoising strength** in default settings for redraw pass.
+
+
 ![UI](1-ui.png)
 
 Enable redraw if it disabled. Select tile size, change padding and mask blur.
