@@ -48,6 +48,9 @@ This pass covers bigger area than bands and mostly produces better result, but r
 ### Bands pass
 It adds passes on just seams (rows and columns) and covers small area around them (*width* in ui). It requires less time than offset pass.
 
+### Half tile offset + intersections pass
+It runs Half tile offset pass and then run extra pass on intersections with radial gradient mask
+
 # How to enable 4096 img width and height
 1. Select **Custom size** in **Target size type**
 2. Set **custom width** and **custom height** to 4096

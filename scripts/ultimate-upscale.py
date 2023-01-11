@@ -1,6 +1,6 @@
 import math
 import gradio as gr
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageOps
 from modules import processing, shared, images, devices, scripts
 from modules.processing import StableDiffusionProcessing
 from modules.processing import Processed
@@ -16,6 +16,7 @@ class USDUSFMode(Enum):
     NONE = 0
     BAND_PASS = 1
     HALF_TILE = 2
+    HALF_TILE_PLUS_INTERSECTIONS = 3
 
 class USDUpscaler():
 
@@ -103,6 +104,9 @@ class USDUpscaler():
             seams_job_count = self.rows + self.cols - 2
         elif self.seams_fix.mode == USDUSFMode.HALF_TILE:
             seams_job_count = self.rows * (self.cols - 1) + (self.rows - 1) * self.cols
+        elif self.seams_fix.mode == USDUSFMode.HALF_TILE_PLUS_INTERSECTIONS:
+            seams_job_count = self.rows * (self.cols - 1) + (self.rows - 1) * self.cols + (self.rows - 1) * (self.cols - 1)
+
         state.job_count = redraw_job_count + seams_job_count
 
     def print_info(self):
@@ -297,6 +301,39 @@ class USDUSeamsFix():
 
         return image
 
+    def half_tile_process_corners(self, p, image, rows, cols):
+        fixed_image = self.half_tile_process(p, image, rows, cols)
+        self.init_draw(p)
+        gradient = Image.radial_gradient("L").resize(
+            (self.tile_size, self.tile_size), resample=Image.BICUBIC)
+        gradient = ImageOps.invert(gradient)
+        p.denoising_strength = self.denoise
+        p.mask_blur = 0
+
+        for yi in range(rows-1):
+            for xi in range(cols-1):
+                if state.interrupted:
+                    break
+                p.width = self.tile_size
+                p.height = self.tile_size
+                p.inpaint_full_res = True
+                p.inpaint_full_res_padding = 0
+                mask = Image.new("L", (fixed_image.width, fixed_image.height), "black")
+                mask.paste(gradient, (xi*self.tile_size + self.tile_size//2,
+                                      yi*self.tile_size + self.tile_size//2))
+
+                p.init_images = [fixed_image]
+                p.image_mask = mask
+                processed = processing.process_images(p)
+                if (len(processed.images) > 0):
+                    fixed_image = processed.images[0]
+
+        p.width = fixed_image.width
+        p.height = fixed_image.height
+        self.initial_info = processed.infotext(p, 0)
+
+        return fixed_image
+
     def band_pass_process(self, p, image, cols, rows):
         
         self.init_draw(p)
@@ -354,6 +391,8 @@ class USDUSeamsFix():
             return self.band_pass_process(p, image, rows, cols)
         elif USDUSFMode(self.mode) == USDUSFMode.HALF_TILE:
             return self.half_tile_process(p, image, rows, cols)
+        elif USDUSFMode(self.mode) == USDUSFMode.HALF_TILE_PLUS_INTERSECTIONS:
+            return self.half_tile_process_corners(p, image, rows, cols)
         else:
             return image
 
@@ -375,7 +414,8 @@ class Script(scripts.Script):
         seams_fix_types = [
             "None",
             "Band pass", 
-            "Half tile offset pass"
+            "Half tile offset pass",
+            "Half tile offset pass + intersections"
         ]
 
         redrow_modes = [
@@ -418,7 +458,7 @@ class Script(scripts.Script):
 
         def select_fix_type(fix_index):
             all_visible = fix_index != 0
-            mask_blur_visible = fix_index == 2
+            mask_blur_visible = fix_index == 2 or fix_index == 3
             width_visible = fix_index == 1
 
             return [gr.update(visible=all_visible),
