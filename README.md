@@ -29,11 +29,13 @@ For 4k image use:
 * **Tile size**: 768
 * **Mask blur**: 20
 * **Padding**: 55
+* **Denoising strength**: 0.35-0.45
 
 For 2k image you can use (you can try it on 4k, but result have many mutations):
 * **Tile size**: 512
 * **Mask blur**: 16
 * **Padding**: 32
+* **Denoising strength**: 0.35-0.45
 
 Or the same settings as for 4k
 
