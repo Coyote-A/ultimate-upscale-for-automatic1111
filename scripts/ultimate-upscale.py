@@ -308,7 +308,8 @@ class USDUSeamsFix():
             (self.tile_size, self.tile_size), resample=Image.BICUBIC)
         gradient = ImageOps.invert(gradient)
         p.denoising_strength = self.denoise
-        p.mask_blur = 0
+        #p.mask_blur = 0
+        p.mask_blur = self.mask_blur
 
         for yi in range(rows-1):
             for xi in range(cols-1):
