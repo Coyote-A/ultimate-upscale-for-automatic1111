@@ -5,6 +5,7 @@ Now you have the opportunity to use a large denoise (0.3-0.5) and not spawn many
 All instructions can be found on the project's [wiki](https://github.com/Coyote-A/ultimate-upscale-for-automatic1111/wiki).
 
 # Examples
+More on [wiki page](https://github.com/Coyote-A/ultimate-upscale-for-automatic1111/wiki/Examples)
 
 <details> 
   <summary>E1</summary>
