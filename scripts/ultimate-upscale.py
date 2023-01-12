@@ -353,7 +353,7 @@ class USDUSeamsFix():
         for xi in range(1, cols):
             if state.interrupted:
                     break
-            p.width = self._width + self.padding * 2
+            p.width = self.width + self.padding * 2
             p.height = image.height
             p.inpaint_full_res = True
             p.inpaint_full_res_padding = self.padding
