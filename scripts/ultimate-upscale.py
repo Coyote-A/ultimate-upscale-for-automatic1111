@@ -504,6 +504,8 @@ class Script(scripts.Script):
         p.do_not_save_samples = True
         p.inpaint_full_res = False
 
+        p.inpainting_fill = 1
+
         seed = p.seed
 
         # Init image
