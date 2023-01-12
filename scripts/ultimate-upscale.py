@@ -142,8 +142,8 @@ class USDURedraw():
     def init_draw(self, p, width, height):
         p.inpaint_full_res = True
         p.inpaint_full_res_padding = self.padding
-        p.width = self.tile_size
-        p.height = self.tile_size
+        p.width = math.ceil((self.tile_size+self.padding) / 64) * 64
+        p.height = math.ceil((self.tile_size+self.padding) / 64) * 64
         mask = Image.new("L", (width, height), "black")
         draw = ImageDraw.Draw(mask)
         return mask, draw
@@ -238,8 +238,8 @@ class USDUSeamsFix():
 
     def init_draw(self, p):
         self.initial_info = None
-        p.width = self.tile_size
-        p.height = self.tile_size
+        p.width = math.ceil((self.tile_size+self.padding) / 64) * 64
+        p.height = math.ceil((self.tile_size+self.padding) / 64) * 64
 
     def half_tile_process(self, p, image, rows, cols):
         
