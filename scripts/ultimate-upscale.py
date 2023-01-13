@@ -122,6 +122,8 @@ class USDUpscaler():
         self.p.extra_generation_params["Ultimate SD upscale padding"] = self.redraw.padding
 
     def process(self):
+        state.begin()
+        self.calc_jobs_count()
         self.result_images = []
         if self.redraw.enabled:
             self.image = self.redraw.start(self.p, self.image, self.rows, self.cols)
@@ -136,6 +138,7 @@ class USDUpscaler():
             self.result_images.append(self.image)
             if self.seams_fix.save:
                 self.save_image()
+        state.end()
 
 class USDURedraw():
 
@@ -244,6 +247,7 @@ class USDUSeamsFix():
     def half_tile_process(self, p, image, rows, cols):
         
         self.init_draw(p)
+        processed = None
 
         gradient = Image.linear_gradient("L")
         row_gradient = Image.new("L", (self.tile_size, self.tile_size), "black")
@@ -297,12 +301,14 @@ class USDUSeamsFix():
 
         p.width = image.width
         p.height = image.height
-        self.initial_info = processed.infotext(p, 0)
+        if processed is not None:
+            self.initial_info = processed.infotext(p, 0)
 
         return image
 
     def half_tile_process_corners(self, p, image, rows, cols):
         fixed_image = self.half_tile_process(p, image, rows, cols)
+        processed = None
         self.init_draw(p)
         gradient = Image.radial_gradient("L").resize(
             (self.tile_size, self.tile_size), resample=Image.BICUBIC)
@@ -331,13 +337,15 @@ class USDUSeamsFix():
 
         p.width = fixed_image.width
         p.height = fixed_image.height
-        self.initial_info = processed.infotext(p, 0)
+        if processed is not None:
+            self.initial_info = processed.infotext(p, 0)
 
         return fixed_image
 
     def band_pass_process(self, p, image, cols, rows):
         
         self.init_draw(p)
+        processed = None
 
         p.denoising_strength = self.denoise
         p.mask_blur = 0
@@ -383,7 +391,8 @@ class USDUSeamsFix():
 
         p.width = image.width
         p.height = image.height
-        self.initial_info = processed.infotext(p, 0)
+        if processed is not None:
+            self.initial_info = processed.infotext(p, 0)
 
         return image
 
@@ -529,7 +538,6 @@ class Script(scripts.Script):
         # Drawing
         upscaler.setup_redraw(redraw_mode, padding, mask_blur)
         upscaler.setup_seams_fix(seams_fix_padding, seams_fix_denoise, seams_fix_mask_blur, seams_fix_width, seams_fix_type)
-        upscaler.calc_jobs_count()
         upscaler.print_info()
         upscaler.add_extra_info()
         upscaler.process()
