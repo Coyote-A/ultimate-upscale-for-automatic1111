@@ -34,8 +34,8 @@ class USDUpscaler():
         self.seams_fix.tile_width = tile_width if tile_width > 0 else tile_height
         self.seams_fix.tile_height = tile_height if tile_height > 0 else tile_width
         self.initial_info = None
-        self.rows = math.ceil(self.p.height / (tile_height if tile_height > 0 else tile_width))
-        self.cols = math.ceil(self.p.width / (tile_width if tile_width > 0 else tile_height))
+        self.rows = math.ceil(self.p.height / self.redraw.tile_height)
+        self.cols = math.ceil(self.p.width / self.redraw.tile_width)
 
     def get_factor(self, num):
         # Its just return, don't need elif
@@ -506,7 +506,7 @@ class Script(scripts.Script):
                 upscaler_index, save_upscaled_image, redraw_mode, save_seams_fix_image, seams_fix_mask_blur,
                 seams_fix_type, target_size_type, custom_width, custom_height, custom_scale]
 
-    def run(self, p, _, tile_width, tile_heiht, mask_blur, padding, seams_fix_width, seams_fix_denoise, seams_fix_padding,
+    def run(self, p, _, tile_width, tile_height, mask_blur, padding, seams_fix_width, seams_fix_denoise, seams_fix_padding,
             upscaler_index, save_upscaled_image, redraw_mode, save_seams_fix_image, seams_fix_mask_blur,
             seams_fix_type, target_size_type, custom_width, custom_height, custom_scale):
 
@@ -537,7 +537,7 @@ class Script(scripts.Script):
             p.height = math.ceil((init_img.height * custom_scale) / 64) * 64
 
         # Upscaling
-        upscaler = USDUpscaler(p, init_img, upscaler_index, save_upscaled_image, save_seams_fix_image, tile_width, tile_heiht)
+        upscaler = USDUpscaler(p, init_img, upscaler_index, save_upscaled_image, save_seams_fix_image, tile_width, tile_height)
         upscaler.upscale()
         
         # Drawing
