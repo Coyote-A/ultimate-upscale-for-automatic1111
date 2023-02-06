@@ -244,11 +244,11 @@ class USDUSeamsFix():
 
     def init_draw(self, p):
         self.initial_info = None
-        p.width = math.ceil((self.tile_size+self.padding) / 64) * 64
-        p.height = math.ceil((self.tile_size+self.padding) / 64) * 64
+        p.width = math.ceil((self.tile_width+self.padding) / 64) * 64
+        p.height = math.ceil((self.tile_height+self.padding) / 64) * 64
 
     def half_tile_process(self, p, image, rows, cols):
-        
+
         self.init_draw(p)
         processed = None
 
@@ -257,7 +257,7 @@ class USDUSeamsFix():
         row_gradient.paste(gradient.resize(
             (self.tile_size, self.tile_size//2), resample=Image.BICUBIC), (0, 0))
         row_gradient.paste(gradient.rotate(180).resize(
-                (self.tile_size, self.tile_size//2), resample=Image.BICUBIC), 
+                (self.tile_size, self.tile_size//2), resample=Image.BICUBIC),
                 (0, self.tile_size//2))
         col_gradient = Image.new("L", (self.tile_size, self.tile_size), "black")
         col_gradient.paste(gradient.rotate(90).resize(
@@ -346,7 +346,7 @@ class USDUSeamsFix():
         return fixed_image
 
     def band_pass_process(self, p, image, cols, rows):
-        
+
         self.init_draw(p)
         processed = None
 
@@ -361,7 +361,7 @@ class USDUSeamsFix():
         row_gradient = mirror_gradient.resize((image.width, self.width), resample=Image.BICUBIC)
         col_gradient = mirror_gradient.rotate(90).resize((self.width, image.height), resample=Image.BICUBIC)
 
-        for xi in range(1, cols):
+        for xi in range(1, rows):
             if state.interrupted:
                     break
             p.width = self.width + self.padding * 2
@@ -369,14 +369,14 @@ class USDUSeamsFix():
             p.inpaint_full_res = True
             p.inpaint_full_res_padding = self.padding
             mask = Image.new("L", (image.width, image.height), "black")
-            mask.paste(col_gradient, (xi * self.tile_size - self.width // 2, 0))
+            mask.paste(col_gradient, (xi * self.tile_width - self.width // 2, 0))
 
             p.init_images = [image]
             p.image_mask = mask
             processed = processing.process_images(p)
             if (len(processed.images) > 0):
                 image = processed.images[0]
-        for yi in range(1, rows):
+        for yi in range(1, cols):
             if state.interrupted:
                     break
             p.width = image.width
@@ -384,7 +384,7 @@ class USDUSeamsFix():
             p.inpaint_full_res = True
             p.inpaint_full_res_padding = self.padding
             mask = Image.new("L", (image.width, image.height), "black")
-            mask.paste(row_gradient, (0, yi * self.tile_size - self.width // 2))
+            mask.paste(row_gradient, (0, yi * self.tile_height - self.width // 2))
 
             p.init_images = [image]
             p.image_mask = mask
