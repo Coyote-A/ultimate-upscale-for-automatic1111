@@ -23,7 +23,7 @@ class USDUpscaler():
     def __init__(self, p, image, upscaler_index:int, save_redraw, save_seams_fix, tile_size) -> None:
         self.p:StableDiffusionProcessing = p
         self.image:Image = image
-        self.scale_factor = max(p.width, p.height) // max(image.width, image.height)
+        self.scale_factor = math.ceil(max(p.width, p.height) / max(image.width, image.height))
         self.upscaler = shared.sd_upscalers[upscaler_index]
         self.redraw = USDURedraw()
         self.redraw.save = save_redraw
