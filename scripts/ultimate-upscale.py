@@ -27,15 +27,15 @@ class USDUpscaler():
         self.upscaler = shared.sd_upscalers[upscaler_index]
         self.redraw = USDURedraw()
         self.redraw.save = save_redraw
-        self.redraw.tile_width = tile_width
-        self.redraw.tile_height = tile_height
+        self.redraw.tile_width = tile_width if tile_width > 0 else tile_height
+        self.redraw.tile_height = tile_height if tile_height > 0 else tile_width
         self.seams_fix = USDUSeamsFix()
         self.seams_fix.save = save_seams_fix
-        self.seams_fix.tile_width = tile_width
-        self.seams_fix.tile_height = tile_height
+        self.seams_fix.tile_width = tile_width if tile_width > 0 else tile_height
+        self.seams_fix.tile_height = tile_height if tile_height > 0 else tile_width
         self.initial_info = None
-        self.rows = math.ceil(self.p.height / tile_height)
-        self.cols = math.ceil(self.p.width / tile_width)
+        self.rows = math.ceil(self.p.height / (tile_height if tile_height > 0 else tile_width))
+        self.cols = math.ceil(self.p.width / (tile_width if tile_width > 0 else tile_height))
 
     def get_factor(self, num):
         # Its just return, don't need elif
@@ -112,6 +112,7 @@ class USDUpscaler():
         state.job_count = redraw_job_count + seams_job_count
 
     def print_info(self):
+        print(f"Tile size: {self.redraw.tile_width}x{self.redraw.tile_height}")
         print(f"Tiles amount: {self.rows * self.cols}")
         print(f"Grid: {self.rows}x{self.cols}")
         print(f"Redraw enabled: {self.redraw.enabled}")
@@ -454,8 +455,8 @@ class Script(scripts.Script):
                                 value=shared.sd_upscalers[0].name, type="index")
         with gr.Row():
             redraw_mode = gr.Dropdown(label="Type", choices=[k for k in redrow_modes], type="index", value=next(iter(redrow_modes)))
-            tile_width = gr.Slider(minimum=256, maximum=2048, step=64, label='Tile width', value=512)
-            tile_height = gr.Slider(minimum=256, maximum=2048, step=64, label='Tile height', value=512)
+            tile_width = gr.Slider(minimum=0, maximum=2048, step=64, label='Tile width', value=512)
+            tile_height = gr.Slider(minimum=0, maximum=2048, step=64, label='Tile height', value=0)
             mask_blur = gr.Slider(label='Mask blur', minimum=0, maximum=64, step=1, value=8)
             padding = gr.Slider(label='Padding', minimum=0, maximum=128, step=1, value=32)
         gr.HTML("<p style=\"margin-bottom:0.75em\">Seams fix:</p>")
