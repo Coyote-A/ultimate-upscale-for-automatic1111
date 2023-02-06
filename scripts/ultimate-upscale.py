@@ -253,17 +253,17 @@ class USDUSeamsFix():
         processed = None
 
         gradient = Image.linear_gradient("L")
-        row_gradient = Image.new("L", (self.tile_size, self.tile_size), "black")
+        row_gradient = Image.new("L", (self.tile_width, self.tile_height), "black")
         row_gradient.paste(gradient.resize(
-            (self.tile_size, self.tile_size//2), resample=Image.BICUBIC), (0, 0))
+            (self.tile_width, self.tile_height//2), resample=Image.BICUBIC), (0, 0))
         row_gradient.paste(gradient.rotate(180).resize(
-                (self.tile_size, self.tile_size//2), resample=Image.BICUBIC),
-                (0, self.tile_size//2))
-        col_gradient = Image.new("L", (self.tile_size, self.tile_size), "black")
+                (self.tile_width, self.tile_height//2), resample=Image.BICUBIC),
+                (0, self.tile_height//2))
+        col_gradient = Image.new("L", (self.tile_width, self.tile_height), "black")
         col_gradient.paste(gradient.rotate(90).resize(
-            (self.tile_size//2, self.tile_size), resample=Image.BICUBIC), (0, 0))
+            (self.tile_width//2, self.tile_height), resample=Image.BICUBIC), (0, 0))
         col_gradient.paste(gradient.rotate(270).resize(
-            (self.tile_size//2, self.tile_size), resample=Image.BICUBIC), (self.tile_size//2, 0))
+            (self.tile_width//2, self.tile_height), resample=Image.BICUBIC), (self.tile_width//2, 0))
 
         p.denoising_strength = self.denoise
         p.mask_blur = self.mask_blur
@@ -272,12 +272,12 @@ class USDUSeamsFix():
             for xi in range(cols):
                 if state.interrupted:
                     break
-                p.width = self.tile_size
-                p.height = self.tile_size
+                p.width = self.tile_width
+                p.height = self.tile_height
                 p.inpaint_full_res = True
                 p.inpaint_full_res_padding = self.padding
                 mask = Image.new("L", (image.width, image.height), "black")
-                mask.paste(row_gradient, (xi*self.tile_size, yi*self.tile_size + self.tile_size//2))
+                mask.paste(row_gradient, (xi*self.tile_width, yi*self.tile_height + self.tile_height//2))
 
                 p.init_images = [image]
                 p.image_mask = mask
@@ -289,12 +289,12 @@ class USDUSeamsFix():
             for xi in range(cols-1):
                 if state.interrupted:
                     break
-                p.width = self.tile_size
-                p.height = self.tile_size
+                p.width = self.tile_width
+                p.height = self.tile_height
                 p.inpaint_full_res = True
                 p.inpaint_full_res_padding = self.padding
                 mask = Image.new("L", (image.width, image.height), "black")
-                mask.paste(col_gradient, (xi*self.tile_size+self.tile_size//2, yi*self.tile_size))
+                mask.paste(col_gradient, (xi*self.tile_width+self.tile_width//2, yi*self.tile_height))
 
                 p.init_images = [image]
                 p.image_mask = mask
