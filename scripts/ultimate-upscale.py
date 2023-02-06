@@ -314,7 +314,7 @@ class USDUSeamsFix():
         processed = None
         self.init_draw(p)
         gradient = Image.radial_gradient("L").resize(
-            (self.tile_size, self.tile_size), resample=Image.BICUBIC)
+            (self.tile_width, self.tile_height), resample=Image.BICUBIC)
         gradient = ImageOps.invert(gradient)
         p.denoising_strength = self.denoise
         #p.mask_blur = 0
@@ -324,13 +324,13 @@ class USDUSeamsFix():
             for xi in range(cols-1):
                 if state.interrupted:
                     break
-                p.width = self.tile_size
-                p.height = self.tile_size
+                p.width = self.tile_width
+                p.height = self.tile_height
                 p.inpaint_full_res = True
                 p.inpaint_full_res_padding = 0
                 mask = Image.new("L", (fixed_image.width, fixed_image.height), "black")
-                mask.paste(gradient, (xi*self.tile_size + self.tile_size//2,
-                                      yi*self.tile_size + self.tile_size//2))
+                mask.paste(gradient, (xi*self.tile_width + self.tile_width//2,
+                                      yi*self.tile_height + self.tile_height//2))
 
                 p.init_images = [fixed_image]
                 p.image_mask = mask
