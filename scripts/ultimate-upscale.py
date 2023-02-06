@@ -20,21 +20,23 @@ class USDUSFMode(Enum):
 
 class USDUpscaler():
 
-    def __init__(self, p, image, upscaler_index:int, save_redraw, save_seams_fix, tile_size) -> None:
+    def __init__(self, p, image, upscaler_index:int, save_redraw, save_seams_fix, tile_width, tile_height) -> None:
         self.p:StableDiffusionProcessing = p
         self.image:Image = image
         self.scale_factor = max(p.width, p.height) // max(image.width, image.height)
         self.upscaler = shared.sd_upscalers[upscaler_index]
         self.redraw = USDURedraw()
         self.redraw.save = save_redraw
-        self.redraw.tile_size = tile_size
+        self.redraw.tile_width = tile_width
+        self.redraw.tile_height = tile_height
         self.seams_fix = USDUSeamsFix()
         self.seams_fix.save = save_seams_fix
-        self.seams_fix.tile_size = tile_size
+        self.seams_fix.tile_width = tile_width
+        self.seams_fix.tile_height = tile_height
         self.initial_info = None
-        self.rows = math.ceil(self.p.height / tile_size)
-        self.cols = math.ceil(self.p.width / tile_size)
-        
+        self.rows = math.ceil(self.p.height / tile_height)
+        self.cols = math.ceil(self.p.width / tile_width)
+
     def get_factor(self, num):
         # Its just return, don't need elif
         if num == 1:
@@ -117,7 +119,8 @@ class USDUpscaler():
 
     def add_extra_info(self):
         self.p.extra_generation_params["Ultimate SD upscale upscaler"] = self.upscaler.name
-        self.p.extra_generation_params["Ultimate SD upscale tile_size"] = self.redraw.tile_size
+        self.p.extra_generation_params["Ultimate SD upscale tile_width"] = self.redraw.tile_width
+        self.p.extra_generation_params["Ultimate SD upscale tile_height"] = self.redraw.tile_height
         self.p.extra_generation_params["Ultimate SD upscale mask_blur"] = self.p.mask_blur
         self.p.extra_generation_params["Ultimate SD upscale padding"] = self.redraw.padding
 
@@ -145,18 +148,18 @@ class USDURedraw():
     def init_draw(self, p, width, height):
         p.inpaint_full_res = True
         p.inpaint_full_res_padding = self.padding
-        p.width = math.ceil((self.tile_size+self.padding) / 64) * 64
-        p.height = math.ceil((self.tile_size+self.padding) / 64) * 64
+        p.width = math.ceil((self.tile_width+self.padding) / 64) * 64
+        p.height = math.ceil((self.tile_height+self.padding) / 64) * 64
         mask = Image.new("L", (width, height), "black")
         draw = ImageDraw.Draw(mask)
         return mask, draw
 
     def calc_rectangle(self, xi, yi):
-        x1 = xi * self.tile_size
-        y1 = yi * self.tile_size
-        x2 = xi * self.tile_size + self.tile_size
-        y2 = yi * self.tile_size + self.tile_size
-        
+        x1 = xi * self.tile_width
+        y1 = yi * self.tile_height
+        x2 = xi * self.tile_width + self.tile_width
+        y2 = yi * self.tile_height + self.tile_height
+
         return x1, y1, x2, y2
 
     def linear_process(self, p, image, rows, cols):
@@ -423,7 +426,7 @@ class Script(scripts.Script):
 
         seams_fix_types = [
             "None",
-            "Band pass", 
+            "Band pass",
             "Half tile offset pass",
             "Half tile offset pass + intersections"
         ]
@@ -433,7 +436,7 @@ class Script(scripts.Script):
             "Chess",
             "None"
         ]
-        
+
         info = gr.HTML(
             "<p style=\"margin-bottom:0.75em\">Will upscale the image depending on the selected target size type</p>")
 
@@ -451,7 +454,8 @@ class Script(scripts.Script):
                                 value=shared.sd_upscalers[0].name, type="index")
         with gr.Row():
             redraw_mode = gr.Dropdown(label="Type", choices=[k for k in redrow_modes], type="index", value=next(iter(redrow_modes)))
-            tile_size = gr.Slider(minimum=256, maximum=2048, step=64, label='Tile size', value=512)
+            tile_width = gr.Slider(minimum=256, maximum=2048, step=64, label='Tile width', value=512)
+            tile_height = gr.Slider(minimum=256, maximum=2048, step=64, label='Tile height', value=512)
             mask_blur = gr.Slider(label='Mask blur', minimum=0, maximum=64, step=1, value=8)
             padding = gr.Slider(label='Padding', minimum=0, maximum=128, step=1, value=32)
         gr.HTML("<p style=\"margin-bottom:0.75em\">Seams fix:</p>")
@@ -497,12 +501,12 @@ class Script(scripts.Script):
             outputs=[custom_width, custom_height, custom_scale]
         )
 
-        return [info, tile_size, mask_blur, padding, seams_fix_width, seams_fix_denoise, seams_fix_padding,
-                upscaler_index, save_upscaled_image, redraw_mode, save_seams_fix_image, seams_fix_mask_blur, 
+        return [info, tile_width, tile_height, mask_blur, padding, seams_fix_width, seams_fix_denoise, seams_fix_padding,
+                upscaler_index, save_upscaled_image, redraw_mode, save_seams_fix_image, seams_fix_mask_blur,
                 seams_fix_type, target_size_type, custom_width, custom_height, custom_scale]
 
-    def run(self, p, _, tile_size, mask_blur, padding, seams_fix_width, seams_fix_denoise, seams_fix_padding, 
-            upscaler_index, save_upscaled_image, redraw_mode, save_seams_fix_image, seams_fix_mask_blur, 
+    def run(self, p, _, tile_width, tile_heiht, mask_blur, padding, seams_fix_width, seams_fix_denoise, seams_fix_padding,
+            upscaler_index, save_upscaled_image, redraw_mode, save_seams_fix_image, seams_fix_mask_blur,
             seams_fix_type, target_size_type, custom_width, custom_height, custom_scale):
 
         # Init
@@ -532,7 +536,7 @@ class Script(scripts.Script):
             p.height = math.ceil((init_img.height * custom_scale) / 64) * 64
 
         # Upscaling
-        upscaler = USDUpscaler(p, init_img, upscaler_index, save_upscaled_image, save_seams_fix_image, tile_size)
+        upscaler = USDUpscaler(p, init_img, upscaler_index, save_upscaled_image, save_seams_fix_image, tile_width, tile_heiht)
         upscaler.upscale()
         
         # Drawing
@@ -544,3 +548,4 @@ class Script(scripts.Script):
         result_images = upscaler.result_images
 
         return Processed(p, result_images, seed, upscaler.initial_info if upscaler.initial_info is not None else "")
+
