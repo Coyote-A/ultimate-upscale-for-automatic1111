@@ -74,7 +74,6 @@ class USDUGrid():
                 image_masked = Image.new('RGBa', (m_image.width, m_image.height))
                 image_masked.paste(image.convert("RGBA").convert("RGBa"), mask=ImageOps.invert(mask_for_overlay.convert('L')))
                 image_masked = image_masked.convert('RGBA')
-                # image_masked.save(f"F:/tt2/o{col.pos}.png")
                 if col.paste_to is not None:
                     x, y, w, h = col.paste_to
                     base_image = Image.new('RGBA', (image_masked.width, image_masked.height))
@@ -87,35 +86,6 @@ class USDUGrid():
                 image = image.convert('RGBA')
                 image.alpha_composite(image_masked)
                 image = image.convert('RGB')
-                # base_image = copy.deepcopy(image)
-                # mask_image = Image.new('L', (image.width, image.height))
-                # x, y, w, h = col.paste_to
-                # base_image.paste(col.tile, (x,y))
-                # print(f"fuck you bitch: {type(col.mask)}")
-                # mask_image.paste(col.mask, (x,y))
-                # mask_image = ImageOps.invert(mask_image)
-                # mask_image = mask_image.filter(ImageFilter.GaussianBlur(self.mask_blur))
-                # # if col.paste_to is not None:
-                # #     x, y, w, h = col.paste_to
-                # #     base_image = Image.new('RGBA', (col.tile.width, col.tile.height))
-                # #     image = images.resize_image(1, image, w, h)
-                # #     base_image.paste(image, (x, y))
-                # #     image = base_image
-
-                # image = image.convert('RGBA')
-                # image = Image.composite(image, base_image, mask_image)
-                # image = image.convert('RGB')
-
-                # # xi, yi = col.pos
-                # # x1 = self.padding if xi > 0 else 0
-                # # y1 = self.padding if yi > 0 else 0
-                # # x2 = col.tile.width - self.padding if xi < len(row.cols) else col.tile.width
-                # # y2 = col.tile.height - self.padding if yi < len(self.tiles) else col.tile.height
-                # # tile = col.tile.crop((x1, y1, x2, y2))
-                # # x, y, w, h = col.paste_to
-                # # x = x + self.padding if xi > 0 else 0
-                # # y = y + self.padding if yi > 0 else 0
-                # # self.image.paste(tile, (x,y))
         end_at = time.time()
         print(f"Combine time: {end_at - start_at}")
         return image
@@ -146,18 +116,6 @@ class USDUGridCol():
     def apply_overlay(self, image):
         if self.tile is None:
             return image
-        # x, y, w, h = self.paste_to
-        # image.paste(self.tile, (x,y))
-        # if self.paste_to is not None:
-        #     x, y, w, h = self.paste_to
-        #      base_image = Image.new('RGBA', (self.tile.width, self.tile.height))
-        #     image = images.resize_image(1, image, w, h)
-        #  base_image.paste(image, (x, y))
-        #     image = base_image
-
-        # image = image.convert('RGBA')
-        # image.alpha_composite(self.tile)
-        # image = image.convert('RGB')
 
         return image
 
@@ -410,45 +368,6 @@ class USDURedraw():
                 tiles[yi].append(color)
         image = self.chess_process_processing(p, image, rows, cols, True, tiles)
         image = self.chess_process_processing(p, image, rows, cols, False, tiles)
-        # image = self.chess_process_processing(p, image, rows, cols, True, tiles)
-        # image = self.chess_process_processing(p, image, rows, cols, False, tiles)
-        return image
-        # image = images.combine_grid(grid)
-        # return image
-        # for yi in range(len(tiles)):
-        #     for xi in range(len(tiles[yi])):
-        #         if state.interrupted:
-        #             break
-        #         if not tiles[yi][xi]:
-        #             tiles[yi][xi] = not tiles[yi][xi]
-        #             continue
-        #         tiles[yi][xi] = not tiles[yi][xi]
-        #         draw.rectangle(self.calc_rectangle(xi, yi), fill="white")
-        #         p.init_images = [image]
-        #         p.image_mask = mask
-        #         processed = processing.process_images(p)
-        #         draw.rectangle(self.calc_rectangle(xi, yi), fill="black")
-        #         if (len(processed.images) > 0):
-        #             image = processed.images[0]
-        
-        # for yi in range(len(tiles)):
-        #     for xi in range(len(tiles[yi])):
-        #         if state.interrupted:
-        #             break
-        #         if not tiles[yi][xi]:
-        #             continue
-        #         draw.rectangle(self.calc_rectangle(xi, yi), fill="white")
-        #         p.init_images = [image]
-        #         p.image_mask = mask
-        #         processed = processing.process_images(p)
-        #         draw.rectangle(self.calc_rectangle(xi, yi), fill="black")
-        #         if (len(processed.images) > 0):
-        #             image = processed.images[0]
-
-        p.width = image.width
-        p.height = image.height
-        self.initial_info = processed.infotext(p, 0)
-
         return image
 
     def start(self, p, image, rows, cols):
@@ -457,6 +376,60 @@ class USDURedraw():
             return self.linear_process(p, image, rows, cols)
         if self.mode == USDUMode.CHESS:
             return self.chess_process(p, image, rows, cols)
+
+class USDUHalfTile():
+    
+    def __init__(self, tile_width, tile_height, image, padding, rows, cols) -> None:
+        self.tile_width = tile_width
+        self.tille_height = tile_height
+        self.image = image
+        self.padding = padding
+        self.initial_info = None
+        self.rows = rows
+        self.cols = cols
+    
+    def init_draw(self, p, denoise, mask_blur):
+        p.width = math.ceil((self.tile_width+self.padding) / 64) * 64
+        p.height = math.ceil((self.tile_height+self.padding) / 64) * 64
+        p.denoising_strength = denoise
+        p.mask_blur = mask_blur
+        p.width = self.tile_width
+        p.height = self.tile_height
+        p.inpaint_full_res = True
+        p.inpaint_full_res_padding = self.padding
+
+    def setup_gradient(self):
+        gradient = Image.linear_gradient("L")
+
+        self.row_gradient = Image.new("L", (self.tile_width, self.tile_height), "black")
+        self.row_gradient.paste(gradient.resize(
+            (self.tile_width, self.tile_height//2), resample=Image.BICUBIC), (0, 0))
+        self.row_gradient.paste(gradient.rotate(180).resize(
+                (self.tile_width, self.tile_height//2), resample=Image.BICUBIC),
+                (0, self.tile_height//2))
+        self.col_gradient = Image.new("L", (self.tile_width, self.tile_height), "black")
+        self.col_gradient.paste(gradient.rotate(90).resize(
+            (self.tile_width//2, self.tile_height), resample=Image.BICUBIC), (0, 0))
+        self.col_gradient.paste(gradient.rotate(270).resize(
+            (self.tile_width//2, self.tile_height), resample=Image.BICUBIC), (self.tile_width//2, 0))
+        
+    def process(self, p, denoise, mask_blur):
+        for yi in range(rows-1):
+            for xi in range(cols):
+                if state.interrupted:
+                    break
+                
+                mask = Image.new("L", (image.width, image.height), "black")
+                mask.paste(row_gradient, (xi*self.tile_width, yi*self.tile_height + self.tile_height//2))
+
+                p.init_images = [image]
+                p.image_mask = mask
+                processed = processing.process_images(p)
+                if (len(processed.images) > 0):
+                    image = processed.images[0]
+        self.init_draw(p, denoise, mask_blur)
+        self.setup_gradient()
+
 
 class USDUSeamsFix():
 
@@ -486,22 +459,7 @@ class USDUSeamsFix():
         p.denoising_strength = self.denoise
         p.mask_blur = self.mask_blur
 
-        for yi in range(rows-1):
-            for xi in range(cols):
-                if state.interrupted:
-                    break
-                p.width = self.tile_width
-                p.height = self.tile_height
-                p.inpaint_full_res = True
-                p.inpaint_full_res_padding = self.padding
-                mask = Image.new("L", (image.width, image.height), "black")
-                mask.paste(row_gradient, (xi*self.tile_width, yi*self.tile_height + self.tile_height//2))
-
-                p.init_images = [image]
-                p.image_mask = mask
-                processed = processing.process_images(p)
-                if (len(processed.images) > 0):
-                    image = processed.images[0]
+        
 
         for yi in range(rows):
             for xi in range(cols-1):
