@@ -1,6 +1,8 @@
 # Ultimate SD Upscale extension for [AUTOMATIC1111 Stable Diffusion web UI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)
 Now you have the opportunity to use a large denoise (0.3-0.5) and not spawn many artifacts. Works on any video card, since you can use a 512x512 tile size and the image will converge.
 
+News channel: https://t.me/usdunews
+
 # Instructions
 All instructions can be found on the project's [wiki](https://github.com/Coyote-A/ultimate-upscale-for-automatic1111/wiki).
 
