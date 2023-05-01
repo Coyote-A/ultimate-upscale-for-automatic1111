@@ -97,7 +97,10 @@ class USDUpscaler():
         self.seams_fix.enabled = self.seams_fix.mode != USDUSFMode.NONE
 
     def save_image(self):
-        images.save_image(self.image, self.p.outpath_samples, "", self.p.seed, self.p.prompt, opts.grid_format, info=self.initial_info, p=self.p)
+        if type(self.p.prompt) != list:
+            images.save_image(self.image, self.p.outpath_samples, "", self.p.seed, self.p.prompt, opts.samples_format, info=self.initial_info, p=self.p)
+        else:
+            images.save_image(self.image, self.p.outpath_samples, "", self.p.seed, self.p.prompt[0], opts.samples_format, info=self.initial_info, p=self.p)
 
     def calc_jobs_count(self):
         redraw_job_count = (self.rows * self.cols) if self.redraw.enabled else 0
