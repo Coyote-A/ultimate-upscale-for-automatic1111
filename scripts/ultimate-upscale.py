@@ -522,6 +522,8 @@ class Script(scripts.Script):
         p.inpaint_full_res = False
 
         p.inpainting_fill = 1
+        p.n_iter = 1
+        p.batch_size = 1
 
         seed = p.seed
 
