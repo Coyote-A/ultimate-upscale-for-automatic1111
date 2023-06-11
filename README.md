@@ -41,3 +41,75 @@ More on [wiki page](https://github.com/Coyote-A/ultimate-upscale-for-automatic11
   4k upscaled. **Tile size**: 768, **Padding**: 55, **Mask blur**: 20, **Denoise**: 0.4
   ![4k upscale](https://i.imgur.com/LCYLfCs.jpg)
 </details>
+
+# API Usage
+
+```javascript
+{
+"script_name" : "ultimate sd upscale",
+"script_args" : [
+	null, // _ (not used)
+	512, // tile_width
+	512, // tile_height
+	8, // mask_blur
+	32, // padding
+	64, // seams_fix_width
+	0.35, // seams_fix_denoise
+	32, // seams_fix_padding
+	0, // upscaler_index
+	true, // save_upscaled_image a.k.a Upscaled
+	0, // redraw_mode
+	false, // save_seams_fix_image a.k.a Seams fix
+	8, // seams_fix_mask_blur
+	0, // seams_fix_type
+	0, // target_size_type
+	2048, // custom_width
+	2048, // custom_height
+	2 // custom_scale
+]
+}
+```
+upscaler_index
+| Value         |  |
+|:-------------:| -----:|
+| 0 | None |
+| 1 | Lanczos |
+| 2 | Nearest |
+| 3 | ESRGAN_4x |
+| 4 | LDSR |
+| 5 | R-ESRGAN_4x+ |
+| 6 | R-ESRGAN 4x+ Anime6B |
+| 7 | ScuNET GAN |
+| 8 | ScuNET PSNR |
+| 9 | SwinIR 4x |
+
+redraw_mode
+| Value         |  |
+|:-------------:| -----:|
+| 0 | Linear |
+| 1 | Chess |
+| 2 | None |
+
+seams_fix_mask_blur
+| Value         |  |
+|:-------------:| -----:|
+| 0 | None |
+| 1 | BAND_PASS |
+| 2 | HALF_TILE |
+| 3 | HALF_TILE_PLUS_INTERSECTIONS |
+
+seams_fix_type
+| Value         |  |
+|:-------------:| -----:|
+| 0 | None |
+| 1 | Band pass |
+| 2 | Half tile offset pass |
+| 3 | Half tile offset pass + intersections |
+
+seams_fix_type
+| Value         |  |
+|:-------------:| -----:|
+| 0 | From img2img2 settings |
+| 1 | Custom size |
+| 2 | Scale from image size |
+
