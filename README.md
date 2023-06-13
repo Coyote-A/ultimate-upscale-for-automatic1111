@@ -6,6 +6,10 @@ News channel: https://t.me/usdunews
 # Instructions
 All instructions can be found on the project's [wiki](https://github.com/Coyote-A/ultimate-upscale-for-automatic1111/wiki).
 
+# Refs
+
+https://github.com/ssitu/ComfyUI_UltimateSDUpscale - Implementation for ComfyUI
+
 # Examples
 More on [wiki page](https://github.com/Coyote-A/ultimate-upscale-for-automatic1111/wiki/Examples)
 
