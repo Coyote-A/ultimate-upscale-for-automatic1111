@@ -7,6 +7,8 @@ from modules.processing import Processed
 from modules.shared import opts, state
 from enum import Enum
 
+elem_id_prefix = "ultimateupscale"
+
 class USDUMode(Enum):
     LINEAR = 0
     CHESS = 1
@@ -445,34 +447,34 @@ class Script(scripts.Script):
             "<p style=\"margin-bottom:0.75em\">Will upscale the image depending on the selected target size type</p>")
 
         with gr.Row():
-            target_size_type = gr.Dropdown(label="Target size type", choices=[k for k in target_size_types], type="index",
+            target_size_type = gr.Dropdown(label="Target size type", elem_id=f"{elem_id_prefix}_target_size_type", choices=[k for k in target_size_types], type="index",
                                   value=next(iter(target_size_types)))
 
-            custom_width = gr.Slider(label='Custom width', minimum=64, maximum=8192, step=64, value=2048, visible=False, interactive=True)
-            custom_height = gr.Slider(label='Custom height', minimum=64, maximum=8192, step=64, value=2048, visible=False, interactive=True)
-            custom_scale = gr.Slider(label='Scale', minimum=1, maximum=16, step=0.01, value=2, visible=False, interactive=True)
+            custom_width = gr.Slider(label='Custom width', elem_id=f"{elem_id_prefix}_custom_width", minimum=64, maximum=8192, step=64, value=2048, visible=False, interactive=True)
+            custom_height = gr.Slider(label='Custom height', elem_id=f"{elem_id_prefix}_custom_height", minimum=64, maximum=8192, step=64, value=2048, visible=False, interactive=True)
+            custom_scale = gr.Slider(label='Scale', elem_id=f"{elem_id_prefix}_custom_scale", minimum=1, maximum=16, step=0.01, value=2, visible=False, interactive=True)
 
         gr.HTML("<p style=\"margin-bottom:0.75em\">Redraw options:</p>")
         with gr.Row():
-            upscaler_index = gr.Radio(label='Upscaler', choices=[x.name for x in shared.sd_upscalers],
+            upscaler_index = gr.Radio(label='Upscaler', elem_id=f"{elem_id_prefix}_upscaler_index", choices=[x.name for x in shared.sd_upscalers],
                                 value=shared.sd_upscalers[0].name, type="index")
         with gr.Row():
-            redraw_mode = gr.Dropdown(label="Type", choices=[k for k in redrow_modes], type="index", value=next(iter(redrow_modes)))
-            tile_width = gr.Slider(minimum=0, maximum=2048, step=64, label='Tile width', value=512)
-            tile_height = gr.Slider(minimum=0, maximum=2048, step=64, label='Tile height', value=0)
-            mask_blur = gr.Slider(label='Mask blur', minimum=0, maximum=64, step=1, value=8)
-            padding = gr.Slider(label='Padding', minimum=0, maximum=512, step=1, value=32)
+            redraw_mode = gr.Dropdown(label="Type", elem_id=f"{elem_id_prefix}_redraw_mode", choices=[k for k in redrow_modes], type="index", value=next(iter(redrow_modes)))
+            tile_width = gr.Slider(elem_id=f"{elem_id_prefix}_tile_width", minimum=0, maximum=2048, step=64, label='Tile width', value=512)
+            tile_height = gr.Slider(elem_id=f"{elem_id_prefix}_tile_height", minimum=0, maximum=2048, step=64, label='Tile height', value=0)
+            mask_blur = gr.Slider(elem_id=f"{elem_id_prefix}_mask_blur", label='Mask blur', minimum=0, maximum=64, step=1, value=8)
+            padding = gr.Slider(elem_id=f"{elem_id_prefix}_padding", label='Padding', minimum=0, maximum=512, step=1, value=32)
         gr.HTML("<p style=\"margin-bottom:0.75em\">Seams fix:</p>")
         with gr.Row():
-            seams_fix_type = gr.Dropdown(label="Type", choices=[k for k in seams_fix_types], type="index", value=next(iter(seams_fix_types)))
-            seams_fix_denoise = gr.Slider(label='Denoise', minimum=0, maximum=1, step=0.01, value=0.35, visible=False, interactive=True)
-            seams_fix_width = gr.Slider(label='Width', minimum=0, maximum=128, step=1, value=64, visible=False, interactive=True)
-            seams_fix_mask_blur = gr.Slider(label='Mask blur', minimum=0, maximum=64, step=1, value=4, visible=False, interactive=True)
-            seams_fix_padding = gr.Slider(label='Padding', minimum=0, maximum=128, step=1, value=16, visible=False, interactive=True)
-        gr.HTML("<p style=\"margin-bottom:0.75em\">Save options:</p>")
+            seams_fix_type = gr.Dropdown(label="Type", elem_id=f"{elem_id_prefix}_seams_fix_type", choices=[k for k in seams_fix_types], type="index", value=next(iter(seams_fix_types)))
+            seams_fix_denoise = gr.Slider(label='Denoise', elem_id=f"{elem_id_prefix}_seams_fix_denoise", minimum=0, maximum=1, step=0.01, value=0.35, visible=False, interactive=True)
+            seams_fix_width = gr.Slider(label='Width', elem_id=f"{elem_id_prefix}_seams_fix_width", minimum=0, maximum=128, step=1, value=64, visible=False, interactive=True)
+            seams_fix_mask_blur = gr.Slider(label='Mask blur', elem_id=f"{elem_id_prefix}_seams_fix_mask_blur", minimum=0, maximum=64, step=1, value=4, visible=False, interactive=True)
+            seams_fix_padding = gr.Slider(label='Padding', elem_id=f"{elem_id_prefix}_seams_fix_padding", minimum=0, maximum=128, step=1, value=16, visible=False, interactive=True)
+        gr.HTML("<p style=\"margin-bottom:0.75em\">Save optionsxxx:</p>")
         with gr.Row():
-            save_upscaled_image = gr.Checkbox(label="Upscaled", value=True)
-            save_seams_fix_image = gr.Checkbox(label="Seams fix", value=False)
+            save_upscaled_image = gr.Checkbox(label="Upscaled", elem_id=f"{elem_id_prefix}_save_upscaled_image", value=True)
+            save_seams_fix_image = gr.Checkbox(label="Seams fix", elem_id=f"{elem_id_prefix}_save_seams_fix_image", value=False)
 
         def select_fix_type(fix_index):
             all_visible = fix_index != 0
