@@ -94,14 +94,6 @@ redraw_mode
 | 1 | Chess |
 | 2 | None |
 
-seams_fix_mask_blur
-| Value         |  |
-|:-------------:| -----:|
-| 0 | None |
-| 1 | BAND_PASS |
-| 2 | HALF_TILE |
-| 3 | HALF_TILE_PLUS_INTERSECTIONS |
-
 seams_fix_type
 | Value         |  |
 |:-------------:| -----:|
