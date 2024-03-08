@@ -507,6 +507,16 @@ class Script(scripts.Script):
             outputs=[custom_width, custom_height, custom_scale]
         )
 
+        def init_field(scale_name):
+            try:
+                scale_index = target_size_types.index(scale_name)
+                custom_width.visible = custom_height.visible = scale_index == 1
+                custom_scale.visible = scale_index == 2
+            except:
+                pass
+
+        target_size_type.init_field = init_field
+
         return [info, tile_width, tile_height, mask_blur, padding, seams_fix_width, seams_fix_denoise, seams_fix_padding,
                 upscaler_index, save_upscaled_image, redraw_mode, save_seams_fix_image, seams_fix_mask_blur,
                 seams_fix_type, target_size_type, custom_width, custom_height, custom_scale]
