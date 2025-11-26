@@ -1,119 +1,43 @@
-# Ultimate SD Upscale extension for [AUTOMATIC1111 Stable Diffusion web UI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)
-Now you have the opportunity to use a large denoise (0.3-0.5) and not spawn many artifacts. Works on any video card, since you can use a 512x512 tile size and the image will converge.
+# Ultimate + ADetailer Combo (A1111)
 
-News channel: https://t.me/usdunews
+Extensão “always on” para txt2img/img2img no AUTOMATIC1111 que une:
+- **Ultimate SD Upscale**: upscale em tiles com correção de costuras.
+- **ADetailer**: detecção (rostos, mãos, etc.) e inpaint focado.
 
-# Instructions
-All instructions can be found on the project's [wiki](https://github.com/Coyote-A/ultimate-upscale-for-automatic1111/wiki).
+Gera direto na resolução final (sem Hires fix). Se a extensão estiver ativa, o pipeline dispara automaticamente após o txt2img/img2img.
 
-# Refs
+## Instalação
+1. Copie esta pasta para `stable-diffusion-webui/extensions/`.
+2. Já incluído: `scripts/ultimate-upscale.py`. Mantenha-o em `scripts/`.
+3. Modelos ADetailer: coloque `.pt` em `models/adetailer` (YOLO/YOLO-World) ou use mediapipe (não requer download).
+4. Reinicie o WebUI.
 
-https://github.com/ssitu/ComfyUI_UltimateSDUpscale - Implementation for ComfyUI
+## Uso rápido
+1) Abra o acordeão “Ultimate + ADetailer” e marque **Ativar combo**.  
+2) Escolha o **Modo**:
+   - **Refinar com ADetailer e depois fazer upscale**: detecta → inpaint nas máscaras → upscale global.
+   - **Tiles guiados pela detecção**: detecta → usa máscaras para tiles menores nas áreas detectadas → upscale global.
+3) Defina a **Escala final** (ex.: 2.0) e o **Modelo de upscale** (ESRGAN/SwinIR/4x* instalados).  
+4) Ajuste o **Detector** (modelo, confiança, dilatar/erodir, blur, merge/invert) e o **Denoise do refino**.  
+5) Ajuste o Ultimate: **tile width/height**, **padding**, **mask blur** e **modo de redraw** (Linear/Chess/None).  
+6) Gere normalmente (sem Hires fix).
 
-# Examples
-More on [wiki page](https://github.com/Coyote-A/ultimate-upscale-for-automatic1111/wiki/Examples)
+## Parâmetros principais
+- **Ativar combo**: liga/desliga a extensão.
+- **Modo**: “Refinar → Upscale” ou “Tiles guiados”.
+- **Escala final**: fator direto de upscale.
+- **Detector ADetailer**: modelo YOLO/mediapipe; confiança; dilatar/erodir; blur; merge/invert.
+- **Denoise do refino**: força de inpaint nas áreas detectadas.
+- **Ultimate**: upscaler (4x-Nickel/R-ESRGAN/SwinIR/etc.), tile width/height, padding, mask blur, modo de redraw (Linear/Chess/None).
 
-<details> 
-  <summary>E1</summary>
-  Original image
+## Perfil sugerido para A10 (24 GB)
+- Escala 2–3× direto; detecção em alta.  
+- Tiles fora das máscaras: ~768; dentro (tiles guiados): 320–384.  
+- Padding 64 e mask blur 10–12 no redraw.  
+- Denoise de refino 0.3–0.45; dilatação 4–8 px e blur 8–12 nas máscaras.  
+- Redraw: Linear (mais previsível) ou Chess (melhor nas costuras) conforme teste.
 
-  ![Original](https://i.imgur.com/J8mRYOD.png)
-
-  2k upscaled. **Tile size**: 512, **Padding**: 32, **Mask blur**: 16, **Denoise**: 0.4
-  ![2k upscale](https://i.imgur.com/0aKua4r.png)
-</details>
-
-<details> 
-  <summary>E2</summary>
-  Original image
-
-  ![Original](https://i.imgur.com/aALNI2w.png)
-
-  2k upscaled. **Tile size**: 768, **Padding**: 55, **Mask blur**: 20, **Denoise**: 0.35
-  ![2k upscale](https://i.imgur.com/B5PHz0J.png)
-
-  4k upscaled. **Tile size**: 768, **Padding**: 55, **Mask blur**: 20, **Denoise**: 0.35
-  ![4k upscale](https://i.imgur.com/tIUQ7TJ.jpg)
-</details>
-
-<details> 
-  <summary>E3</summary>
-  Original image
-
-  ![Original](https://i.imgur.com/AGtszA8.png)
-
-  4k upscaled. **Tile size**: 768, **Padding**: 55, **Mask blur**: 20, **Denoise**: 0.4
-  ![4k upscale](https://i.imgur.com/LCYLfCs.jpg)
-</details>
-
-# API Usage
-
-```javascript
-{
-"script_name" : "ultimate sd upscale",
-"script_args" : [
-	null, // _ (not used)
-	512, // tile_width
-	512, // tile_height
-	8, // mask_blur
-	32, // padding
-	64, // seams_fix_width
-	0.35, // seams_fix_denoise
-	32, // seams_fix_padding
-	0, // upscaler_index
-	true, // save_upscaled_image a.k.a Upscaled
-	0, // redraw_mode
-	false, // save_seams_fix_image a.k.a Seams fix
-	8, // seams_fix_mask_blur
-	0, // seams_fix_type
-	0, // target_size_type
-	2048, // custom_width
-	2048, // custom_height
-	2 // custom_scale
-]
-}
-```
-upscaler_index
-| Value         |  |
-|:-------------:| -----:|
-| 0 | None |
-| 1 | Lanczos |
-| 2 | Nearest |
-| 3 | ESRGAN_4x |
-| 4 | LDSR |
-| 5 | R-ESRGAN_4x+ |
-| 6 | R-ESRGAN 4x+ Anime6B |
-| 7 | ScuNET GAN |
-| 8 | ScuNET PSNR |
-| 9 | SwinIR 4x |
-
-redraw_mode
-| Value         |  |
-|:-------------:| -----:|
-| 0 | Linear |
-| 1 | Chess |
-| 2 | None |
-
-seams_fix_mask_blur
-| Value         |  |
-|:-------------:| -----:|
-| 0 | None |
-| 1 | BAND_PASS |
-| 2 | HALF_TILE |
-| 3 | HALF_TILE_PLUS_INTERSECTIONS |
-
-seams_fix_type
-| Value         |  |
-|:-------------:| -----:|
-| 0 | None |
-| 1 | Band pass |
-| 2 | Half tile offset pass |
-| 3 | Half tile offset pass + intersections |
-
-seams_fix_type
-| Value         |  |
-|:-------------:| -----:|
-| 0 | From img2img2 settings |
-| 1 | Custom size |
-| 2 | Scale from image size |
-
+## Notas
+- Se nada for detectado, cai no upscale normal.
+- Para economizar VRAM: mediapipe ou modelo leve; tiles maiores fora das áreas.  
+- Metadados seguem do job original; versões intermediárias não são salvas automaticamente.
