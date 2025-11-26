@@ -1,119 +1,36 @@
-# Ultimate SD Upscale extension for [AUTOMATIC1111 Stable Diffusion web UI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)
-Now you have the opportunity to use a large denoise (0.3-0.5) and not spawn many artifacts. Works on any video card, since you can use a 512x512 tile size and the image will converge.
+# Ultimate + ADetailer Combo (A1111)
 
-News channel: https://t.me/usdunews
+Extensão para o AUTOMATIC1111 que combina:
+- Ultimate SD Upscale (upscale em tiles com fix de costuras).
+- ADetailer (detecção de rosto/mão/etc. e inpaint focado).
 
-# Instructions
-All instructions can be found on the project's [wiki](https://github.com/Coyote-A/ultimate-upscale-for-automatic1111/wiki).
+Não usa Hires fix: gera direto na resolução-alvo definida na UI da extensão.
 
-# Refs
+## Instalação
+1. Coloque esta pasta em `stable-diffusion-webui/extensions/`.
+2. Certifique-se de ter o Ultimate SD Upscale (já incluído em `scripts/ultimate-upscale.py`).
+3. Tenha um modelo do ADetailer em `models/adetailer` (YOLO/YOLO-World) ou use mediapipe (funciona sem baixar modelo).
+4. Reinicie o WebUI.
 
-https://github.com/ssitu/ComfyUI_UltimateSDUpscale - Implementation for ComfyUI
+## Uso (txt2img e img2img)
+1. Abra o acordeão “Ultimate + ADetailer” e marque “Ativar combo”.
+2. Escolha o modo:
+   - “Refinar com ADetailer e depois fazer upscale”: detecta → inpaint nas máscaras → upscale global.
+   - “Tiles guiados pela detecção”: detecta → tiles menores nas áreas detectadas → upscale global.
+3. Defina escala final (ex.: 2.0) e upscaler.
+4. Ajuste detector (modelo, confiança, dilatar/blur) e denoise do refino.
+5. Ajuste tiles/padding/blur do Ultimate.
+6. Gere normalmente (sem Hires fix).
 
-# Examples
-More on [wiki page](https://github.com/Coyote-A/ultimate-upscale-for-automatic1111/wiki/Examples)
+## Parâmetros principais
+- Ativar combo: liga/desliga a extensão.
+- Modo: “Refinar → Upscale” ou “Tiles guiados”.
+- Escala final: fator de upscale direto.
+- Detector: modelo ADetailer ou mediapipe; confiança; dilatar/erodir; blur; merge/invert.
+- Denoise do refino: força de inpaint nas áreas detectadas.
+- Ultimate: upscaler, tile width/height, padding e mask blur (redraw).
 
-<details> 
-  <summary>E1</summary>
-  Original image
-
-  ![Original](https://i.imgur.com/J8mRYOD.png)
-
-  2k upscaled. **Tile size**: 512, **Padding**: 32, **Mask blur**: 16, **Denoise**: 0.4
-  ![2k upscale](https://i.imgur.com/0aKua4r.png)
-</details>
-
-<details> 
-  <summary>E2</summary>
-  Original image
-
-  ![Original](https://i.imgur.com/aALNI2w.png)
-
-  2k upscaled. **Tile size**: 768, **Padding**: 55, **Mask blur**: 20, **Denoise**: 0.35
-  ![2k upscale](https://i.imgur.com/B5PHz0J.png)
-
-  4k upscaled. **Tile size**: 768, **Padding**: 55, **Mask blur**: 20, **Denoise**: 0.35
-  ![4k upscale](https://i.imgur.com/tIUQ7TJ.jpg)
-</details>
-
-<details> 
-  <summary>E3</summary>
-  Original image
-
-  ![Original](https://i.imgur.com/AGtszA8.png)
-
-  4k upscaled. **Tile size**: 768, **Padding**: 55, **Mask blur**: 20, **Denoise**: 0.4
-  ![4k upscale](https://i.imgur.com/LCYLfCs.jpg)
-</details>
-
-# API Usage
-
-```javascript
-{
-"script_name" : "ultimate sd upscale",
-"script_args" : [
-	null, // _ (not used)
-	512, // tile_width
-	512, // tile_height
-	8, // mask_blur
-	32, // padding
-	64, // seams_fix_width
-	0.35, // seams_fix_denoise
-	32, // seams_fix_padding
-	0, // upscaler_index
-	true, // save_upscaled_image a.k.a Upscaled
-	0, // redraw_mode
-	false, // save_seams_fix_image a.k.a Seams fix
-	8, // seams_fix_mask_blur
-	0, // seams_fix_type
-	0, // target_size_type
-	2048, // custom_width
-	2048, // custom_height
-	2 // custom_scale
-]
-}
-```
-upscaler_index
-| Value         |  |
-|:-------------:| -----:|
-| 0 | None |
-| 1 | Lanczos |
-| 2 | Nearest |
-| 3 | ESRGAN_4x |
-| 4 | LDSR |
-| 5 | R-ESRGAN_4x+ |
-| 6 | R-ESRGAN 4x+ Anime6B |
-| 7 | ScuNET GAN |
-| 8 | ScuNET PSNR |
-| 9 | SwinIR 4x |
-
-redraw_mode
-| Value         |  |
-|:-------------:| -----:|
-| 0 | Linear |
-| 1 | Chess |
-| 2 | None |
-
-seams_fix_mask_blur
-| Value         |  |
-|:-------------:| -----:|
-| 0 | None |
-| 1 | BAND_PASS |
-| 2 | HALF_TILE |
-| 3 | HALF_TILE_PLUS_INTERSECTIONS |
-
-seams_fix_type
-| Value         |  |
-|:-------------:| -----:|
-| 0 | None |
-| 1 | Band pass |
-| 2 | Half tile offset pass |
-| 3 | Half tile offset pass + intersections |
-
-seams_fix_type
-| Value         |  |
-|:-------------:| -----:|
-| 0 | From img2img2 settings |
-| 1 | Custom size |
-| 2 | Scale from image size |
-
+## Notas
+- Se nada for detectado, cai no upscale normal.
+- Para economizar VRAM, use mediapipe ou um modelo pequeno; tiles maiores fora das áreas ajudam em GPUs menores.
+- Metadados seguem do job original; versões intermediárias não são salvas automaticamente.
